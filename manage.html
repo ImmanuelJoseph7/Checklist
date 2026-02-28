@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Checklists</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #555;
+        }
+        .item {
+            display: flex;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .remove {
+            background: #ff4444;
+            color: white;
+        }
+        .add {
+            background: #4CAF50;
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .back-link a {
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Manage Checklists</h1>
+    
+    <div class="section">
+        <h2>🌅 Morning</h2>
+        <div id="morningList"></div>
+        <button class="add" onclick="add('morning')">+ Add Item</button>
+    </div>
+
+    <div class="section">
+        <h2>🌙 Evening</h2>
+        <div id="eveningList"></div>
+        <button class="add" onclick="add('evening')">+ Add Item</button>
+    </div>
+
+    <div class="back-link">
+        <a href="index.html">← Back to Checklist</a>
+    </div>
+
+    <script>
+        const defaultItems = {
+            morning: ['Pray', 'Make Bed', 'Wee Wee', 'Brush Teeth', 'Wash face', 'Moisturise', 'Wear uniform', 'Pack lunchbag', 'Pack water bottle', 'Pack bag', 'Eat breakfast', 'Put on socks & shoes'],
+            evening: ['Put lunchbox in sink (finish food if not empty)', 'Put ice pack FLAT in freezer', 'Poo Poo', 'Shower', 'Moisturise', 'Homework', 'Library Book', 'Dinner', 'Read Bible']
+        };
+
+        function getItems(type) {
+            const stored = localStorage.getItem(`${type}Items`);
+            return stored ? JSON.parse(stored) : defaultItems[type];
+        }
+
+        function saveItems(type, items) {
+            localStorage.setItem(`${type}Items`, JSON.stringify(items));
+        }
+
+        function render(type) {
+            const items = getItems(type);
+            const list = document.getElementById(`${type}List`);
+            
+            list.innerHTML = items.map((item, i) => `
+                <div class="item">
+                    <input type="text" value="${item}" onchange="update('${type}', ${i}, this.value)">
+                    <button class="remove" onclick="remove('${type}', ${i})">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        function update(type, index, value) {
+            const items = getItems(type);
+            items[index] = value;
+            saveItems(type, items);
+        }
+
+        function remove(type, index) {
+            const items = getItems(type);
+            items.splice(index, 1);
+            saveItems(type, items);
+            render(type);
+        }
+
+        function add(type) {
+            const items = getItems(type);
+            items.push('New item');
+            saveItems(type, items);
+            render(type);
+        }
+
+        render('morning');
+        render('evening');
+    </script>
+</body>
+</html>

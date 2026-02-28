@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kids Checklist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        .checklist {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+        }
+        .item:last-child {
+            border-bottom: none;
+        }
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .item.checked {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+        .progress-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #eee;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .coins {
+            text-align: center;
+            font-size: 18px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .reset-btn {
+            padding: 5px 12px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .reset-btn:hover {
+            background: #ff5252;
+        }
+        .rewards {
+            background: #fff9e6;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 2px solid #ffd700;
+        }
+        .rewards h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            color: #333;
+            text-align: center;
+        }
+        .rewards ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+            color: #666;
+        }
+        .rewards li {
+            padding: 4px 0;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        .timer {
+            font-weight: bold;
+            color: #ff6b6b;
+            font-size: 13px;
+        }
+        .timer.expired {
+            color: #999;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 300px;
+        }
+        .modal-content h2 {
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+        .modal-content p {
+            font-size: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="title"></h1>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress">0%</div>
+            </div>
+            <div class="coins" id="coins">🪙 Total Kindness Coins: 0</div>
+        </div>
+        <div class="rewards">
+            <h3>🎁 Rewards</h3>
+            <ul>
+                <li>
+                    <span>🌟 Complete before 5pm = 3 coins</span>
+                    <span class="timer" id="timer1"></span>
+                </li>
+                <li>
+                    <span>⭐ Complete before 6pm = 1 coin</span>
+                    <span class="timer" id="timer2"></span>
+                </li>
+            </ul>
+        </div>
+        <div class="checklist" id="checklist"></div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle"></h2>
+            <p id="modalMessage"></p>
+        </div>
+    </div>
+
+    <script>
+        const hour = new Date().getHours();
+        const isMorning = hour >= 5 && hour < 12;
+        const type = isMorning ? 'morning' : 'evening';
+        
+        document.getElementById('title').textContent = isMorning ? '🌅 Morning Checklist' : '🌙 Evening Checklist';
+
+        const defaultItems = {
+            morning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🪥 Brush Teeth', '💧 Wash face', '🧴 Moisturise', '👔 Wear uniform', '🍱 Pack lunchbag', '💧 Pack water bottle', '🎒 Pack bag', '🍳 Eat breakfast', '👟 Put on socks & shoes'],
+            evening: ['🍱 Put lunchbox in sink (finish food if not empty)', '🧊 Put ice pack FLAT in freezer', '🚽 Poo Poo', '🚿 Shower', '🧴 Moisturise', '📝 Homework', '📚 Library Book', '🍽️ Dinner', '📖 Read Bible']
+        };
+
+        function getItems() {
+            const stored = localStorage.getItem(`${type}Items`);
+            return stored ? JSON.parse(stored) : defaultItems[type];
+        }
+
+        function getChecked() {
+            const stored = localStorage.getItem(`${type}Checked`);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveChecked(checked) {
+            localStorage.setItem(`${type}Checked`, JSON.stringify(checked));
+        }
+
+        function getCoins() {
+            return parseInt(localStorage.getItem('totalCoins') || '0');
+        }
+
+        function addCoins(amount) {
+            const total = getCoins() + amount;
+            localStorage.setItem('totalCoins', total.toString());
+            return total;
+        }
+
+        function updateProgress() {
+            const items = getItems();
+            const checked = getChecked();
+            const percent = items.length ? Math.round((checked.length / items.length) * 100) : 0;
+            
+            document.getElementById('progress').style.width = percent + '%';
+            document.getElementById('progress').textContent = percent + '%';
+            document.getElementById('coins').innerHTML = `🪙 Total Kindness Coins: ${getCoins()} <button class="reset-btn" onclick="resetCoins()">Reset Coins</button>`;
+
+            // Check if all completed
+            if (checked.length === items.length && items.length > 0) {
+                const completedKey = `${type}Completed`;
+                const alreadyRewarded = localStorage.getItem(completedKey);
+                
+                if (!alreadyRewarded) {
+                    const hour = new Date().getHours();
+                    let coins = 0;
+                    let message = '';
+                    
+                    if (hour < 17) {
+                        coins = 3;
+                        message = '🎉 Congratulations! You have earned 3 kindness coins!';
+                    } else if (hour < 18) {
+                        coins = 1;
+                        message = '👏 Well done! You have earned 1 kindness coin!';
+                    }
+                    
+                    if (coins > 0) {
+                        const total = addCoins(coins);
+                        localStorage.setItem(completedKey, 'true');
+                        
+                        document.getElementById('modalTitle').textContent = message;
+                        document.getElementById('modalMessage').textContent = `Total coins: ${total}`;
+                        document.getElementById('modal').classList.add('show');
+                        
+                        setTimeout(() => {
+                            document.getElementById('modal').classList.remove('show');
+                        }, 3000);
+                        
+                        updateProgress();
+                    }
+                }
+            }
+        }
+
+        function updateTimers() {
+            const now = new Date();
+            const target5pm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
+            const target6pm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0);
+
+            function formatTime(ms) {
+                if (ms <= 0) return 'Expired';
+                const hours = Math.floor(ms / 3600000);
+                const mins = Math.floor((ms % 3600000) / 60000);
+                const secs = Math.floor((ms % 60000) / 1000);
+                return `${hours}h ${mins}m ${secs}s`;
+            }
+
+            const diff5pm = target5pm - now;
+            const diff6pm = target6pm - now;
+
+            const timer1 = document.getElementById('timer1');
+            const timer2 = document.getElementById('timer2');
+
+            timer1.textContent = formatTime(diff5pm);
+            timer1.className = diff5pm <= 0 ? 'timer expired' : 'timer';
+
+            timer2.textContent = formatTime(diff6pm);
+            timer2.className = diff6pm <= 0 ? 'timer expired' : 'timer';
+        }
+
+        function resetCoins() {
+            if (confirm('Reset total coins to 0?')) {
+                localStorage.setItem('totalCoins', '0');
+                updateProgress();
+            }
+        }
+
+        function render() {
+            const items = getItems();
+            const checked = getChecked();
+            const checklist = document.getElementById('checklist');
+            
+            checklist.innerHTML = items.map((item, i) => `
+                <div class="item ${checked.includes(i) ? 'checked' : ''}">
+                    <input type="checkbox" ${checked.includes(i) ? 'checked' : ''} onchange="toggle(${i})">
+                    <span>${item}</span>
+                </div>
+            `).join('');
+            
+            updateProgress();
+        }
+
+        function toggle(index) {
+            const checked = getChecked();
+            const pos = checked.indexOf(index);
+            if (pos > -1) {
+                checked.splice(pos, 1);
+            } else {
+                checked.push(index);
+            }
+            saveChecked(checked);
+            render();
+        }
+
+        // Reset checklist at 5am and 5pm
+        const lastReset = localStorage.getItem('lastReset');
+        const now = new Date();
+        const resetHour = isMorning ? 5 : 17;
+        const nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour);
+        
+        if (!lastReset || new Date(lastReset) < nextReset && now >= nextReset) {
+            localStorage.setItem(`${type}Checked`, JSON.stringify([]));
+            localStorage.removeItem(`${type}Completed`);
+            localStorage.setItem('lastReset', now.toISOString());
+        }
+
+        updateTimers();
+        setInterval(updateTimers, 1000);
+        render();
+    </script>
+</body>
+</html>
