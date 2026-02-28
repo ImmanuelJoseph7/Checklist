@@ -308,8 +308,8 @@
                     let message = '';
                     
                     if (isSaturday) {
-                        // No time-based rewards on Saturday
-                        coins = 0;
+                        coins = 3;
+                        message = '🎉 Congratulations! You have earned 3 kindness coins!';
                     } else if (isMorning) {
                         if (hour < 7 || (hour === 7 && mins < 45)) {
                             coins = 3;
@@ -431,7 +431,6 @@
 
         // Reset checklist at 5am and 5pm
         const lastReset = localStorage.getItem('lastReset');
-        const now = new Date();
         const resetHour = isSaturday ? 5 : (isMorning ? 5 : 17);
         const nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour);
         
