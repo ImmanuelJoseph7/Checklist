@@ -200,7 +200,7 @@
         const dayOfWeek = now.getDay();
         const isSunday = dayOfWeek === 0;
         const isSaturday = dayOfWeek === 6;
-        const isMorning = hour >= 5 && hour < 12;
+        const isMorning = hour < 15; // Morning until 3pm, evening from 3pm-midnight
         
         let type;
         if (isSaturday) {
@@ -429,9 +429,9 @@
             render();
         }
 
-        // Reset checklist at 5am and 5pm
+        // Reset checklist at midnight for evening, 3pm for morning
         const lastReset = localStorage.getItem('lastReset');
-        const resetHour = isSaturday ? 5 : (isMorning ? 5 : 17);
+        const resetHour = isSaturday ? 0 : (isMorning ? 0 : 15); // Midnight for morning/Saturday, 3pm for evening
         const nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour);
         
         if (!lastReset || new Date(lastReset) < nextReset && now >= nextReset) {
