@@ -223,7 +223,15 @@
         document.getElementById('title').textContent = title;
 
         // Render rewards based on time
-        const rewardsHTML = isSaturday ? '' : (isMorning ? `
+        const rewardsHTML = isSaturday ? '' : (isMorning ? (isSunday ? `
+            <h3>🎁 Rewards</h3>
+            <ul>
+                <li>
+                    <span>🌟 Complete before 9:30am = 3 coins</span>
+                    <span class="timer" id="timer1"></span>
+                </li>
+            </ul>
+        ` : `
             <h3>🎁 Rewards</h3>
             <ul>
                 <li>
@@ -235,7 +243,7 @@
                     <span class="timer" id="timer2"></span>
                 </li>
             </ul>
-        ` : `
+        `) : `
             <h3>🎁 Rewards</h3>
             <ul>
                 <li>
@@ -311,12 +319,19 @@
                         coins = 3;
                         message = '🎉 Congratulations! You have earned 3 kindness coins!';
                     } else if (isMorning) {
-                        if (hour < 7 || (hour === 7 && mins < 45)) {
-                            coins = 3;
-                            message = '🎉 Congratulations! You have earned 3 kindness coins!';
-                        } else if (hour < 8) {
-                            coins = 1;
-                            message = '👏 Well done! You have earned 1 kindness coin!';
+                        if (isSunday) {
+                            if (hour < 9 || (hour === 9 && mins < 30)) {
+                                coins = 3;
+                                message = '🎉 Congratulations! You have earned 3 kindness coins!';
+                            }
+                        } else {
+                            if (hour < 7 || (hour === 7 && mins < 45)) {
+                                coins = 3;
+                                message = '🎉 Congratulations! You have earned 3 kindness coins!';
+                            } else if (hour < 8) {
+                                coins = 1;
+                                message = '👏 Well done! You have earned 1 kindness coin!';
+                            }
                         }
                     } else {
                         if (hour < 17) {
@@ -357,8 +372,12 @@
             let target1, target2, target3;
             
             if (isMorning) {
-                target1 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 45, 0);
-                target2 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+                if (isSunday) {
+                    target1 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 30, 0);
+                } else {
+                    target1 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 45, 0);
+                    target2 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+                }
             } else {
                 target1 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
                 target2 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0);
@@ -374,16 +393,21 @@
             }
 
             const diff1 = target1 - now;
-            const diff2 = target2 - now;
 
             const timer1 = document.getElementById('timer1');
-            const timer2 = document.getElementById('timer2');
+            if (timer1) {
+                timer1.textContent = formatTime(diff1);
+                timer1.className = diff1 <= 0 ? 'timer expired' : 'timer';
+            }
 
-            timer1.textContent = formatTime(diff1);
-            timer1.className = diff1 <= 0 ? 'timer expired' : 'timer';
-
-            timer2.textContent = formatTime(diff2);
-            timer2.className = diff2 <= 0 ? 'timer expired' : 'timer';
+            if (target2) {
+                const diff2 = target2 - now;
+                const timer2 = document.getElementById('timer2');
+                if (timer2) {
+                    timer2.textContent = formatTime(diff2);
+                    timer2.className = diff2 <= 0 ? 'timer expired' : 'timer';
+                }
+            }
             
             if (!isMorning && target3) {
                 const diff3 = target3 - now;
