@@ -183,19 +183,7 @@
             </div>
             <div class="coins" id="coins">🪙 Total Kindness Coins: 0</div>
         </div>
-        <div class="rewards">
-            <h3>🎁 Rewards</h3>
-            <ul>
-                <li>
-                    <span>🌟 Complete before 5pm = 3 coins</span>
-                    <span class="timer" id="timer1"></span>
-                </li>
-                <li>
-                    <span>⭐ Complete before 6pm = 1 coin</span>
-                    <span class="timer" id="timer2"></span>
-                </li>
-            </ul>
-        </div>
+        <div class="rewards" id="rewardsContainer"></div>
         <div class="checklist" id="checklist"></div>
     </div>
 
@@ -207,15 +195,71 @@
     </div>
 
     <script>
-        const hour = new Date().getHours();
+        const now = new Date();
+        const hour = now.getHours();
+        const dayOfWeek = now.getDay();
+        const isSunday = dayOfWeek === 0;
+        const isSaturday = dayOfWeek === 6;
         const isMorning = hour >= 5 && hour < 12;
-        const type = isMorning ? 'morning' : 'evening';
         
-        document.getElementById('title').textContent = isMorning ? '🌅 Morning Checklist' : '🌙 Evening Checklist';
+        let type;
+        if (isSaturday) {
+            type = 'saturday';
+        } else if (isSunday) {
+            type = isMorning ? 'sundayMorning' : 'sundayEvening';
+        } else {
+            type = isMorning ? 'morning' : 'evening';
+        }
+        
+        let title;
+        if (isSaturday) {
+            title = '☀️ Saturday Checklist';
+        } else if (isSunday) {
+            title = isMorning ? '☀️ Sunday Morning Checklist' : '🌙 Sunday Evening Checklist';
+        } else {
+            title = isMorning ? '🌅 Morning Checklist' : '🌙 Evening Checklist';
+        }
+        
+        document.getElementById('title').textContent = title;
+
+        // Render rewards based on time
+        const rewardsHTML = isSaturday ? '' : (isMorning ? `
+            <h3>🎁 Rewards</h3>
+            <ul>
+                <li>
+                    <span>🌟 Complete before 7:45am = 3 coins</span>
+                    <span class="timer" id="timer1"></span>
+                </li>
+                <li>
+                    <span>⭐ Complete before 8:00am = 1 coin</span>
+                    <span class="timer" id="timer2"></span>
+                </li>
+            </ul>
+        ` : `
+            <h3>🎁 Rewards</h3>
+            <ul>
+                <li>
+                    <span>🌟 Complete before 5:00pm = 3 coins</span>
+                    <span class="timer" id="timer1"></span>
+                </li>
+                <li>
+                    <span>⭐ Complete before 6:00pm = 1 coin</span>
+                    <span class="timer" id="timer2"></span>
+                </li>
+                <li>
+                    <span>🍽️ Finish dinner by 7:00pm = +1 bonus coin</span>
+                    <span class="timer" id="timer3"></span>
+                </li>
+            </ul>
+        `);
+        document.getElementById('rewardsContainer').innerHTML = rewardsHTML;
 
         const defaultItems = {
             morning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🪥 Brush Teeth', '💧 Wash face', '🧴 Moisturise', '👔 Wear uniform', '🍱 Pack lunchbag', '💧 Pack water bottle', '🎒 Pack bag', '🍳 Eat breakfast', '👟 Put on socks & shoes'],
-            evening: ['🍱 Put lunchbox in sink (finish food if not empty)', '🧊 Put ice pack FLAT in freezer', '🚽 Poo Poo', '🚿 Shower', '🧴 Moisturise', '📝 Homework', '📚 Library Book', '🍽️ Dinner', '📖 Read Bible']
+            evening: ['🍱 Put lunchbox in sink (finish food if not empty)', '🧊 Put ice pack FLAT in freezer', '🚽 Poo Poo', '🚿 Shower', '🧴 Moisturise', '📝 Homework', '📚 Library Book', '🍽️ Dinner', '📖 Read Bible'],
+            saturday: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🚿 Shower', '🪥 Brush Teeth', '💧 Wash face', '🧴 Moisturise', '👕 Wear Clothes', '💧 Fill water bottle', '🍽️ Eat meal', '👟 Put on socks & shoes', '🚽 Poo Poo', '📖 Read Bible'],
+            sundayMorning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🚿 Shower', '🪥 Brush Teeth', '💧 Wash face', '🧴 Moisturise', '👕 Wear Clothes', '💧 Fill water bottle', '🥞 Eat breakfast', '👟 Put on socks & shoes'],
+            sundayEvening: ['🚽 Poo Poo', '🍽️ Dinner', '📖 Read Bible']
         };
 
         function getItems() {
@@ -257,16 +301,37 @@
                 const alreadyRewarded = localStorage.getItem(completedKey);
                 
                 if (!alreadyRewarded) {
-                    const hour = new Date().getHours();
+                    const now = new Date();
+                    const hour = now.getHours();
+                    const mins = now.getMinutes();
                     let coins = 0;
                     let message = '';
                     
-                    if (hour < 17) {
-                        coins = 3;
-                        message = '🎉 Congratulations! You have earned 3 kindness coins!';
-                    } else if (hour < 18) {
-                        coins = 1;
-                        message = '👏 Well done! You have earned 1 kindness coin!';
+                    if (isSaturday) {
+                        // No time-based rewards on Saturday
+                        coins = 0;
+                    } else if (isMorning) {
+                        if (hour < 7 || (hour === 7 && mins < 45)) {
+                            coins = 3;
+                            message = '🎉 Congratulations! You have earned 3 kindness coins!';
+                        } else if (hour < 8) {
+                            coins = 1;
+                            message = '👏 Well done! You have earned 1 kindness coin!';
+                        }
+                    } else {
+                        if (hour < 17) {
+                            coins = 3;
+                            message = '🎉 Congratulations! You have earned 3 kindness coins!';
+                        } else if (hour < 18) {
+                            coins = 1;
+                            message = '👏 Well done! You have earned 1 kindness coin!';
+                        }
+                        
+                        // Check dinner bonus
+                        if (coins > 0 && hour < 19) {
+                            coins += 1;
+                            message += ' Plus 1 bonus coin for finishing dinner by 7pm!';
+                        }
                     }
                     
                     if (coins > 0) {
@@ -289,8 +354,16 @@
 
         function updateTimers() {
             const now = new Date();
-            const target5pm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
-            const target6pm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0);
+            let target1, target2, target3;
+            
+            if (isMorning) {
+                target1 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 45, 0);
+                target2 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+            } else {
+                target1 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
+                target2 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 18, 0, 0);
+                target3 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 0, 0);
+            }
 
             function formatTime(ms) {
                 if (ms <= 0) return 'Expired';
@@ -300,17 +373,26 @@
                 return `${hours}h ${mins}m ${secs}s`;
             }
 
-            const diff5pm = target5pm - now;
-            const diff6pm = target6pm - now;
+            const diff1 = target1 - now;
+            const diff2 = target2 - now;
 
             const timer1 = document.getElementById('timer1');
             const timer2 = document.getElementById('timer2');
 
-            timer1.textContent = formatTime(diff5pm);
-            timer1.className = diff5pm <= 0 ? 'timer expired' : 'timer';
+            timer1.textContent = formatTime(diff1);
+            timer1.className = diff1 <= 0 ? 'timer expired' : 'timer';
 
-            timer2.textContent = formatTime(diff6pm);
-            timer2.className = diff6pm <= 0 ? 'timer expired' : 'timer';
+            timer2.textContent = formatTime(diff2);
+            timer2.className = diff2 <= 0 ? 'timer expired' : 'timer';
+            
+            if (!isMorning && target3) {
+                const diff3 = target3 - now;
+                const timer3 = document.getElementById('timer3');
+                if (timer3) {
+                    timer3.textContent = formatTime(diff3);
+                    timer3.className = diff3 <= 0 ? 'timer expired' : 'timer';
+                }
+            }
         }
 
         function resetCoins() {
@@ -350,7 +432,7 @@
         // Reset checklist at 5am and 5pm
         const lastReset = localStorage.getItem('lastReset');
         const now = new Date();
-        const resetHour = isMorning ? 5 : 17;
+        const resetHour = isSaturday ? 5 : (isMorning ? 5 : 17);
         const nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour);
         
         if (!lastReset || new Date(lastReset) < nextReset && now >= nextReset) {
@@ -359,8 +441,10 @@
             localStorage.setItem('lastReset', now.toISOString());
         }
 
-        updateTimers();
-        setInterval(updateTimers, 1000);
+        if (!isSaturday) {
+            updateTimers();
+            setInterval(updateTimers, 1000);
+        }
         render();
     </script>
 </body>
