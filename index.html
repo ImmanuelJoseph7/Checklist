@@ -278,7 +278,8 @@
             sundayMorning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🚿 Shower', '🪥 Brush Teeth', '💧 Wash face', '🧴 Moisturise', '👕 Wear Clothes', '💧 Fill water bottle', '🥞 Eat breakfast', '👟 Put on socks & shoes'],
             sundayEvening: ['🚽 Poo Poo', '📖 Read Bible'],
             sundayEveningDinner: ['🍽️ Dinner'],
-            dailyBonus: ['😊 I used manners today!', '🤗 I was polite by responding to others with a happy smile!']
+            morningBonus: ['😴 I went to sleep last night without mucking around!'],
+            eveningBonus: ['😊 I used manners today!', '🤗 I was polite by responding to others with a happy smile!']
         };
 
         function getItems() {
@@ -295,11 +296,17 @@
             return [];
         }
 
+
         function getBonusItems() {
-            const showBonus = isSaturday ? hour >= 18 : (!isMorning && hour >= 18);
-            if (showBonus) {
-                const stored = localStorage.getItem('dailyBonusItems');
-                return stored ? JSON.parse(stored) : defaultItems.dailyBonus;
+            if (isMorning && !isSaturday) {
+                const stored = localStorage.getItem('morningBonusItems');
+                return stored ? JSON.parse(stored) : defaultItems.morningBonus;
+            } else if ((isSaturday && hour >= 18) || (!isMorning && !isSaturday && hour >= 18)) {
+                const morningStored = localStorage.getItem('morningBonusItems');
+                const eveningStored = localStorage.getItem('eveningBonusItems');
+                const morningItems = morningStored ? JSON.parse(morningStored) : defaultItems.morningBonus;
+                const eveningItems = eveningStored ? JSON.parse(eveningStored) : defaultItems.eveningBonus;
+                return isSaturday ? [...morningItems, ...eveningItems] : eveningItems;
             }
             return [];
         }
@@ -318,11 +325,17 @@
             return [];
         }
 
+
         function getBonusChecked() {
-            const showBonus = isSaturday ? hour >= 18 : (!isMorning && hour >= 18);
-            if (showBonus) {
-                const stored = localStorage.getItem('dailyBonusChecked');
+            if (isMorning && !isSaturday) {
+                const stored = localStorage.getItem('morningBonusChecked');
                 return stored ? JSON.parse(stored) : [];
+            } else if ((isSaturday && hour >= 18) || (!isMorning && !isSaturday && hour >= 18)) {
+                const morningStored = localStorage.getItem('morningBonusChecked');
+                const eveningStored = localStorage.getItem('eveningBonusChecked');
+                const morningChecked = morningStored ? JSON.parse(morningStored) : [];
+                const eveningChecked = eveningStored ? JSON.parse(eveningStored) : [];
+                return isSaturday ? [...morningChecked, ...eveningChecked] : eveningChecked;
             }
             return [];
         }
@@ -338,20 +351,52 @@
             }
         }
 
+
         function saveBonusChecked(checked) {
-            const showBonus = isSaturday ? hour >= 18 : (!isMorning && hour >= 18);
-            if (showBonus) {
-                localStorage.setItem('dailyBonusChecked', JSON.stringify(checked));
+            if (isMorning && !isSaturday) {
+                localStorage.setItem('morningBonusChecked', JSON.stringify(checked));
+            } else if ((isSaturday && hour >= 18) || (!isMorning && !isSaturday && hour >= 18)) {
+                if (isSaturday) {
+                    const morningItems = defaultItems.morningBonus;
+                    const morningChecked = checked.slice(0, morningItems.length);
+                    const eveningChecked = checked.slice(morningItems.length);
+                    localStorage.setItem('morningBonusChecked', JSON.stringify(morningChecked));
+                    localStorage.setItem('eveningBonusChecked', JSON.stringify(eveningChecked));
+                } else {
+                    localStorage.setItem('eveningBonusChecked', JSON.stringify(checked));
+                }
             }
         }
 
+
         function getBonusRewards() {
-            const stored = localStorage.getItem('dailyBonusRewards');
-            return stored ? JSON.parse(stored) : [];
+            if (isMorning && !isSaturday) {
+                const stored = localStorage.getItem('morningBonusRewards');
+                return stored ? JSON.parse(stored) : [];
+            } else if ((isSaturday && hour >= 18) || (!isMorning && !isSaturday && hour >= 18)) {
+                const morningStored = localStorage.getItem('morningBonusRewards');
+                const eveningStored = localStorage.getItem('eveningBonusRewards');
+                const morningRewards = morningStored ? JSON.parse(morningStored) : [];
+                const eveningRewards = eveningStored ? JSON.parse(eveningStored) : [];
+                return isSaturday ? [...morningRewards, ...eveningRewards] : eveningRewards;
+            }
+            return [];
         }
 
         function saveBonusRewards(rewards) {
-            localStorage.setItem('dailyBonusRewards', JSON.stringify(rewards));
+            if (isMorning && !isSaturday) {
+                localStorage.setItem('morningBonusRewards', JSON.stringify(rewards));
+            } else if ((isSaturday && hour >= 18) || (!isMorning && !isSaturday && hour >= 18)) {
+                if (isSaturday) {
+                    const morningItems = defaultItems.morningBonus;
+                    const morningRewards = rewards.filter(r => r < morningItems.length);
+                    const eveningRewards = rewards.filter(r => r >= morningItems.length).map(r => r - morningItems.length);
+                    localStorage.setItem('morningBonusRewards', JSON.stringify(morningRewards));
+                    localStorage.setItem('eveningBonusRewards', JSON.stringify(eveningRewards));
+                } else {
+                    localStorage.setItem('eveningBonusRewards', JSON.stringify(rewards));
+                }
+            }
         }
 
         function getCoins() {
@@ -525,11 +570,11 @@
                     localStorage.removeItem(`${dinnerType}Completed`);
                 }
                 
-                const showBonus = isSaturday ? hour >= 18 : (!isMorning && hour >= 18);
-                if (showBonus) {
-                    localStorage.removeItem('dailyBonusChecked');
-                    localStorage.removeItem('dailyBonusRewards');
-                }
+                
+                localStorage.removeItem('morningBonusChecked');
+                localStorage.removeItem('morningBonusRewards');
+                localStorage.removeItem('eveningBonusChecked');
+                localStorage.removeItem('eveningBonusRewards');
                 
                 render();
             }
@@ -675,11 +720,10 @@
             }
             
             // Reset daily bonus
-            const showBonus = isSaturday ? hour >= 18 : (!isMorning && hour >= 18);
-            if (showBonus) {
-                localStorage.setItem('dailyBonusChecked', JSON.stringify([]));
-                localStorage.setItem('dailyBonusRewards', JSON.stringify([]));
-            }
+            localStorage.setItem('morningBonusChecked', JSON.stringify([]));
+            localStorage.setItem('morningBonusRewards', JSON.stringify([]));
+            localStorage.setItem('eveningBonusChecked', JSON.stringify([]));
+            localStorage.setItem('eveningBonusRewards', JSON.stringify([]));
             
             localStorage.setItem('lastReset', now.toISOString());
         }
