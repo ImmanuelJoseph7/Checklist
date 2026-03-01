@@ -193,6 +193,9 @@
             <div class="coins" id="coins">🪙 Total Kindness Coins: 0</div>
         </div>
         <div class="rewards" id="rewardsContainer"></div>
+        <div style="text-align: center; margin-bottom: 10px;">
+            <button class="reset-btn" onclick="resetChecklist()">Reset Checklist</button>
+        </div>
         <div class="checklist" id="checklist"></div>
     </div>
 
@@ -507,6 +510,28 @@
             if (confirm('Reset total coins to 0?')) {
                 localStorage.setItem('totalCoins', '0');
                 updateProgress();
+            }
+        }
+
+        function resetChecklist() {
+            if (confirm('Reset checklist? (Coins will be kept)')) {
+                localStorage.removeItem(`${type}Checked`);
+                localStorage.removeItem(`${type}Completed`);
+                localStorage.removeItem(`${type}CompletedCoins`);
+                
+                if (!isMorning && !isSaturday) {
+                    const dinnerType = isSunday ? 'sundayEveningDinner' : 'eveningDinner';
+                    localStorage.removeItem(`${dinnerType}Checked`);
+                    localStorage.removeItem(`${dinnerType}Completed`);
+                }
+                
+                const showBonus = isSaturday ? hour >= 18 : (!isMorning && hour >= 18);
+                if (showBonus) {
+                    localStorage.removeItem('dailyBonusChecked');
+                    localStorage.removeItem('dailyBonusRewards');
+                }
+                
+                render();
             }
         }
 
