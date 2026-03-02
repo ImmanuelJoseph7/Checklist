@@ -152,6 +152,9 @@
         .timer.expired {
             color: #999;
         }
+        .timer.achieved {
+            color: #4CAF50;
+        }
         .modal {
             display: none;
             position: fixed;
@@ -207,70 +210,31 @@
     </div>
 
     <script>
-        const now = new Date();
-        const hour = now.getHours();
-        const dayOfWeek = now.getDay();
-        const isSunday = dayOfWeek === 0;
-        const isSaturday = dayOfWeek === 6;
-        const isMorning = hour < 15; // Morning until 3pm, evening from 3pm-midnight
+        // ============================================================================
+        // CONFIGURATION & DATA
+        // ============================================================================
         
-        let type;
-        if (isSaturday) {
-            type = 'saturday';
-        } else if (isSunday) {
-            type = isMorning ? 'sundayMorning' : 'sundayEvening';
-        } else {
-            type = isMorning ? 'morning' : 'evening';
-        }
-        
-        let title;
-        if (isSaturday) {
-            title = '☀️ Saturday Checklist';
-        } else if (isSunday) {
-            title = isMorning ? '☀️ Sunday Morning Checklist' : '🌙 Sunday Evening Checklist';
-        } else {
-            title = isMorning ? '🌅 Morning Checklist' : '🌙 Evening Checklist';
-        }
-        
-        document.getElementById('title').textContent = title;
+        const CONFIG = {
+            morningEndHour: 15,
+            bonusStartHour: 18,
+            rewards: {
+                weekdayMorning: [
+                    { hour: 7, minute: 45, coins: 3, label: '🌟 Complete before 7:45am = 3 coins' },
+                    { hour: 8, minute: 0, coins: 1, label: '⭐ Complete before 8:00am = 1 coin' }
+                ],
+                sundayMorning: [
+                    { hour: 9, minute: 30, coins: 3, label: '🌟 Complete before 9:30am = 3 coins' }
+                ],
+                evening: [
+                    { hour: 17, minute: 0, coins: 3, label: '🌟 Complete main tasks before 5:00pm = 3 coins' },
+                    { hour: 18, minute: 0, coins: 1, label: '⭐ Complete main tasks before 6:00pm = 1 coin' },
+                    { hour: 19, minute: 0, coins: 1, label: '🍽️ Finish dinner by 7:00pm = 1 coin', isDinner: true }
+                ],
+                saturday: { coins: 3 }
+            }
+        };
 
-        // Render rewards based on time
-        const rewardsHTML = isSaturday ? '' : (isMorning ? (isSunday ? `
-            <h3>🎁 Rewards</h3>
-            <ul>
-                <li>
-                    <span>🌟 Complete before 9:30am = 3 coins</span>
-                    <span class="timer" id="timer1"></span>
-                </li>
-            </ul>
-        ` : `
-            <h3>🎁 Rewards</h3>
-            <ul>
-                <li>
-                    <span>🌟 Complete before 7:45am = 3 coins</span>
-                    <span class="timer" id="timer1"></span>
-                </li>
-                <li>
-                    <span>⭐ Complete before 8:00am = 1 coin</span>
-                    <span class="timer" id="timer2"></span>
-                </li>
-            </ul>
-        `) : `
-            <h3>🎁 Rewards</h3>
-            <ul>
-                <li>
-                    <span>🌟 Complete main tasks before 5:00pm = 3 coins</span>
-                    <span class="timer" id="timer1"></span>
-                </li>
-                <li>
-                    <span>🍽️ Finish dinner by 7:00pm = 1 coin</span>
-                    <span class="timer" id="timer2"></span>
-                </li>
-            </ul>
-        `);
-        document.getElementById('rewardsContainer').innerHTML = rewardsHTML;
-
-        const defaultItems = {
+        const DEFAULT_ITEMS = {
             morning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🪥 Brush Teeth', '💧 Wash face', '🧴 Moisturise', '👔 Wear uniform', '🍱 Pack lunchbag', '💧 Pack water bottle', '🎒 Pack bag', '🍳 Eat breakfast', '👟 Put on socks & shoes'],
             evening: ['🍱 Put lunchbox in sink (finish food if not empty)', '🧊 Put ice pack FLAT in freezer', '🚽 Poo Poo', '🚿 Shower', '🧴 Moisturise', '📝 Homework', '📚 Library Book', '📖 Read Bible'],
             eveningDinner: ['🍽️ Dinner'],
@@ -282,316 +246,385 @@
             eveningBonus: ['😊 I used manners today!', '🤗 I was polite by responding to others with a happy smile!']
         };
 
-        function getItems() {
-            const stored = localStorage.getItem(`${type}Items`);
-            return stored ? JSON.parse(stored) : defaultItems[type];
+        // ============================================================================
+        // TIME & CONTEXT STATE
+        // ============================================================================
+        
+        // TEST MODE: Set to a specific date/time for testing, or null for real time
+        // const TEST_TIME = new Date(2026, 2, 2, 17, 30, 0); // 5:30pm Monday
+        const TEST_TIME = null; // Real time
+        
+        function getCurrentTime() {
+            return TEST_TIME ? new Date(TEST_TIME) : new Date();
         }
+        
+        const now = getCurrentTime();
+        const hour = now.getHours();
+        const dayOfWeek = now.getDay();
+        const isSunday = dayOfWeek === 0;
+        const isSaturday = dayOfWeek === 6;
+        const isMorning = hour < CONFIG.morningEndHour;
+        
+        const type = isSaturday ? 'saturday' : 
+                     isSunday ? (isMorning ? 'sundayMorning' : 'sundayEvening') :
+                     (isMorning ? 'morning' : 'evening');
+        
+        const title = isSaturday ? '☀️ Saturday Checklist' :
+                      isSunday ? (isMorning ? '☀️ Sunday Morning Checklist' : '🌙 Sunday Evening Checklist') :
+                      (isMorning ? '🌅 Morning Checklist' : '🌙 Evening Checklist');
 
-        function getDinnerItems() {
-            if (!isMorning && !isSaturday) {
-                const dinnerType = isSunday ? 'sundayEveningDinner' : 'eveningDinner';
-                const stored = localStorage.getItem(`${dinnerType}Items`);
-                return stored ? JSON.parse(stored) : defaultItems[dinnerType];
+        // ============================================================================
+        // STORAGE HELPERS
+        // ============================================================================
+        
+        const Storage = {
+            get(key, defaultValue = null) {
+                const value = localStorage.getItem(key);
+                return value ? JSON.parse(value) : defaultValue;
+            },
+            set(key, value) {
+                localStorage.setItem(key, JSON.stringify(value));
+            },
+            remove(key) {
+                localStorage.removeItem(key);
             }
-            return [];
+        };
+
+        // ============================================================================
+        // CHECKLIST DATA MANAGEMENT
+        // ============================================================================
+        
+        function getChecklistType(section = 'main') {
+            if (section === 'dinner') {
+                return isSunday ? 'sundayEveningDinner' : 'eveningDinner';
+            }
+            if (section === 'bonus') {
+                return isMorning ? 'morningBonus' : 'eveningBonus';
+            }
+            return type;
         }
 
+        function getItems(section = 'main') {
+            const checklistType = section === 'main' ? type : getChecklistType(section);
+            return Storage.get(`${checklistType}Items`, DEFAULT_ITEMS[checklistType] || []);
+        }
+
+        function getChecked(section = 'main') {
+            const checklistType = section === 'main' ? type : getChecklistType(section);
+            return Storage.get(`${checklistType}Checked`, []);
+        }
+
+        function saveChecked(checked, section = 'main') {
+            const checklistType = section === 'main' ? type : getChecklistType(section);
+            Storage.set(`${checklistType}Checked`, checked);
+        }
+
+        function shouldShowSection(section) {
+            if (section === 'dinner') return !isMorning && !isSaturday;
+            if (section === 'bonus') {
+                if (isMorning && !isSaturday) return true;
+                if (hour >= CONFIG.bonusStartHour && !isSaturday) return true;
+                if (isSaturday && hour >= CONFIG.bonusStartHour) return true;
+            }
+            return false;
+        }
 
         function getBonusItems() {
+            if (!shouldShowSection('bonus')) return [];
+            
             if (isMorning && !isSaturday) {
-                const stored = localStorage.getItem('morningBonusItems');
-                return stored ? JSON.parse(stored) : defaultItems.morningBonus;
-            } else if ((isSaturday && hour >= 18) || (!isMorning && !isSaturday && hour >= 18)) {
-                const morningStored = localStorage.getItem('morningBonusItems');
-                const eveningStored = localStorage.getItem('eveningBonusItems');
-                const morningItems = morningStored ? JSON.parse(morningStored) : defaultItems.morningBonus;
-                const eveningItems = eveningStored ? JSON.parse(eveningStored) : defaultItems.eveningBonus;
-                return isSaturday ? [...morningItems, ...eveningItems] : eveningItems;
+                return getItems('bonus');
             }
+            
+            if (isSaturday && hour >= CONFIG.bonusStartHour) {
+                const morning = Storage.get('morningBonusItems', DEFAULT_ITEMS.morningBonus);
+                const evening = Storage.get('eveningBonusItems', DEFAULT_ITEMS.eveningBonus);
+                return [...morning, ...evening];
+            }
+            
+            if (!isMorning && !isSaturday && hour >= CONFIG.bonusStartHour) {
+                return getItems('bonus');
+            }
+            
             return [];
         }
-
-        function getChecked() {
-            const stored = localStorage.getItem(`${type}Checked`);
-            return stored ? JSON.parse(stored) : [];
-        }
-
-        function getDinnerChecked() {
-            if (!isMorning && !isSaturday) {
-                const dinnerType = isSunday ? 'sundayEveningDinner' : 'eveningDinner';
-                const stored = localStorage.getItem(`${dinnerType}Checked`);
-                return stored ? JSON.parse(stored) : [];
-            }
-            return [];
-        }
-
 
         function getBonusChecked() {
+            if (!shouldShowSection('bonus')) return [];
+            
             if (isMorning && !isSaturday) {
-                const stored = localStorage.getItem('morningBonusChecked');
-                return stored ? JSON.parse(stored) : [];
-            } else if ((isSaturday && hour >= 18) || (!isMorning && !isSaturday && hour >= 18)) {
-                const morningStored = localStorage.getItem('morningBonusChecked');
-                const eveningStored = localStorage.getItem('eveningBonusChecked');
-                const morningChecked = morningStored ? JSON.parse(morningStored) : [];
-                const eveningChecked = eveningStored ? JSON.parse(eveningStored) : [];
-                return isSaturday ? [...morningChecked, ...eveningChecked] : eveningChecked;
+                return Storage.get('morningBonusChecked', []);
             }
+            
+            if (isSaturday && hour >= CONFIG.bonusStartHour) {
+                const morning = Storage.get('morningBonusChecked', []);
+                const evening = Storage.get('eveningBonusChecked', []);
+                return [...morning, ...evening];
+            }
+            
+            if (!isMorning && !isSaturday && hour >= CONFIG.bonusStartHour) {
+                return Storage.get('eveningBonusChecked', []);
+            }
+            
             return [];
         }
-
-        function saveChecked(checked) {
-            localStorage.setItem(`${type}Checked`, JSON.stringify(checked));
-        }
-
-        function saveDinnerChecked(checked) {
-            if (!isMorning && !isSaturday) {
-                const dinnerType = isSunday ? 'sundayEveningDinner' : 'eveningDinner';
-                localStorage.setItem(`${dinnerType}Checked`, JSON.stringify(checked));
-            }
-        }
-
 
         function saveBonusChecked(checked) {
             if (isMorning && !isSaturday) {
-                localStorage.setItem('morningBonusChecked', JSON.stringify(checked));
-            } else if ((isSaturday && hour >= 18) || (!isMorning && !isSaturday && hour >= 18)) {
-                if (isSaturday) {
-                    const morningItems = defaultItems.morningBonus;
-                    const morningChecked = checked.slice(0, morningItems.length);
-                    const eveningChecked = checked.slice(morningItems.length);
-                    localStorage.setItem('morningBonusChecked', JSON.stringify(morningChecked));
-                    localStorage.setItem('eveningBonusChecked', JSON.stringify(eveningChecked));
-                } else {
-                    localStorage.setItem('eveningBonusChecked', JSON.stringify(checked));
-                }
+                Storage.set('morningBonusChecked', checked);
+            } else if (isSaturday && hour >= CONFIG.bonusStartHour) {
+                const morningCount = DEFAULT_ITEMS.morningBonus.length;
+                Storage.set('morningBonusChecked', checked.slice(0, morningCount));
+                Storage.set('eveningBonusChecked', checked.slice(morningCount));
+            } else if (!isMorning && !isSaturday && hour >= CONFIG.bonusStartHour) {
+                Storage.set('eveningBonusChecked', checked);
             }
         }
 
-
         function getBonusRewards() {
             if (isMorning && !isSaturday) {
-                const stored = localStorage.getItem('morningBonusRewards');
-                return stored ? JSON.parse(stored) : [];
-            } else if ((isSaturday && hour >= 18) || (!isMorning && !isSaturday && hour >= 18)) {
-                const morningStored = localStorage.getItem('morningBonusRewards');
-                const eveningStored = localStorage.getItem('eveningBonusRewards');
-                const morningRewards = morningStored ? JSON.parse(morningStored) : [];
-                const eveningRewards = eveningStored ? JSON.parse(eveningStored) : [];
-                return isSaturday ? [...morningRewards, ...eveningRewards] : eveningRewards;
+                return Storage.get('morningBonusRewards', []);
+            } else if (isSaturday && hour >= CONFIG.bonusStartHour) {
+                const morning = Storage.get('morningBonusRewards', []);
+                const evening = Storage.get('eveningBonusRewards', []);
+                return [...morning, ...evening];
+            } else if (!isMorning && !isSaturday && hour >= CONFIG.bonusStartHour) {
+                return Storage.get('eveningBonusRewards', []);
             }
             return [];
         }
 
         function saveBonusRewards(rewards) {
             if (isMorning && !isSaturday) {
-                localStorage.setItem('morningBonusRewards', JSON.stringify(rewards));
-            } else if ((isSaturday && hour >= 18) || (!isMorning && !isSaturday && hour >= 18)) {
-                if (isSaturday) {
-                    const morningItems = defaultItems.morningBonus;
-                    const morningRewards = rewards.filter(r => r < morningItems.length);
-                    const eveningRewards = rewards.filter(r => r >= morningItems.length).map(r => r - morningItems.length);
-                    localStorage.setItem('morningBonusRewards', JSON.stringify(morningRewards));
-                    localStorage.setItem('eveningBonusRewards', JSON.stringify(eveningRewards));
-                } else {
-                    localStorage.setItem('eveningBonusRewards', JSON.stringify(rewards));
-                }
+                Storage.set('morningBonusRewards', rewards);
+            } else if (isSaturday && hour >= CONFIG.bonusStartHour) {
+                const morningCount = DEFAULT_ITEMS.morningBonus.length;
+                const morningRewards = rewards.filter(r => r < morningCount);
+                const eveningRewards = rewards.filter(r => r >= morningCount).map(r => r - morningCount);
+                Storage.set('morningBonusRewards', morningRewards);
+                Storage.set('eveningBonusRewards', eveningRewards);
+            } else if (!isMorning && !isSaturday && hour >= CONFIG.bonusStartHour) {
+                Storage.set('eveningBonusRewards', rewards);
             }
         }
 
+        // ============================================================================
+        // COINS MANAGEMENT
+        // ============================================================================
+        
         function getCoins() {
-            return parseInt(localStorage.getItem('totalCoins') || '0');
+            return Storage.get('totalCoins', 0);
+        }
+
+        function getDailyCoins() {
+            return Storage.get('dailyCoins', 0);
         }
 
         function addCoins(amount) {
             const total = getCoins() + amount;
-            localStorage.setItem('totalCoins', total.toString());
+            const daily = getDailyCoins() + amount;
+            Storage.set('totalCoins', total);
+            Storage.set('dailyCoins', daily);
             return total;
         }
 
+        function removeCoins(amount) {
+            const total = Math.max(0, getCoins() - amount);
+            const daily = Math.max(0, getDailyCoins() - amount);
+            Storage.set('totalCoins', total);
+            Storage.set('dailyCoins', daily);
+            return total;
+        }
+
+        // ============================================================================
+        // REWARD LOGIC
+        // ============================================================================
+        
+        function calculateReward() {
+            const now = getCurrentTime();
+            const hour = now.getHours();
+            const mins = now.getMinutes();
+            
+            if (isSaturday) {
+                return { coins: CONFIG.rewards.saturday.coins, message: '🎉 Congratulations! You have earned 3 kindness coins!' };
+            }
+            
+            const rewardConfig = isMorning ? 
+                (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) :
+                CONFIG.rewards.evening.filter(r => !r.isDinner);
+            
+            for (const reward of rewardConfig) {
+                if (hour < reward.hour || (hour === reward.hour && mins < reward.minute)) {
+                    const message = reward.coins === 3 ? 
+                        '🎉 Congratulations! You have earned 3 kindness coins!' :
+                        '👏 Well done! You have earned 1 kindness coin!';
+                    return { coins: reward.coins, message };
+                }
+            }
+            
+            return { coins: 0, message: '' };
+        }
+
+        function checkMainCompletion() {
+            const items = getItems('main');
+            const checked = getChecked('main');
+            
+            if (checked.length !== items.length || items.length === 0) return;
+            
+            const completedKey = `${type}Completed`;
+            if (Storage.get(completedKey)) return;
+            
+            const reward = calculateReward();
+            if (reward.coins > 0) {
+                const total = addCoins(reward.coins);
+                Storage.set(completedKey, true);
+                Storage.set(`${completedKey}Coins`, reward.coins);
+                showModal(reward.message, `Total coins: ${total}`);
+            }
+        }
+
+        function checkDinnerCompletion() {
+            if (!shouldShowSection('dinner')) return;
+            
+            const items = getItems('dinner');
+            const checked = getChecked('dinner');
+            
+            if (checked.length !== items.length || items.length === 0) return;
+            
+            const dinnerType = getChecklistType('dinner');
+            const completedKey = `${dinnerType}Completed`;
+            if (Storage.get(completedKey)) return;
+            
+            const now = getCurrentTime();
+            if (now.getHours() < 19) {
+                const total = addCoins(1);
+                Storage.set(completedKey, true);
+                showModal('🍽️ Great job finishing dinner!', `You earned 1 coin! Total coins: ${total}`);
+            }
+        }
+
+        function checkBonusCompletion(index) {
+            const rewards = getBonusRewards();
+            if (rewards.includes(index)) return;
+            
+            rewards.push(index);
+            saveBonusRewards(rewards);
+            
+            const total = addCoins(1);
+            showModal('⭐ Great job!', `You earned 1 coin! Total coins: ${total}`, 2000);
+        }
+
+        // ============================================================================
+        // UI UPDATES
+        // ============================================================================
+        
+        function showModal(title, message, duration = 3000) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('modal').classList.add('show');
+            
+            setTimeout(() => {
+                document.getElementById('modal').classList.remove('show');
+            }, duration);
+        }
+
         function updateProgress() {
-            const items = getItems();
-            const checked = getChecked();
-            const dinnerItems = getDinnerItems();
-            const dinnerChecked = getDinnerChecked();
+            const mainItems = getItems('main');
+            const mainChecked = getChecked('main');
+            const dinnerItems = shouldShowSection('dinner') ? getItems('dinner') : [];
+            const dinnerChecked = shouldShowSection('dinner') ? getChecked('dinner') : [];
             const bonusItems = getBonusItems();
             const bonusChecked = getBonusChecked();
             
-            const totalItems = items.length + dinnerItems.length + bonusItems.length;
-            const totalChecked = checked.length + dinnerChecked.length + bonusChecked.length;
+            const totalItems = mainItems.length + dinnerItems.length + bonusItems.length;
+            const totalChecked = mainChecked.length + dinnerChecked.length + bonusChecked.length;
             const percent = totalItems ? Math.round((totalChecked / totalItems) * 100) : 0;
             
             document.getElementById('progress').style.width = percent + '%';
             document.getElementById('progress').textContent = percent + '%';
-            document.getElementById('coins').innerHTML = `🪙 Total Kindness Coins: ${getCoins()} <button class="reset-btn" onclick="resetCoins()">Reset Coins</button>`;
+            document.getElementById('coins').innerHTML = `
+                🪙 Total: ${getCoins()} | Today: ${getDailyCoins()} 
+                <button class="reset-btn" onclick="resetCoins()">Reset Total</button>
+            `;
+            
+            checkMainCompletion();
+            checkDinnerCompletion();
+        }
 
-            // Check main checklist completion
-            if (checked.length === items.length && items.length > 0) {
-                const completedKey = `${type}Completed`;
-                const alreadyRewarded = localStorage.getItem(completedKey);
-                
-                if (!alreadyRewarded) {
-                    const now = new Date();
-                    const hour = now.getHours();
-                    const mins = now.getMinutes();
-                    let coins = 0;
-                    let message = '';
-                    
-                    if (isSaturday) {
-                        coins = 3;
-                        message = '🎉 Congratulations! You have earned 3 kindness coins!';
-                    } else if (isMorning) {
-                        if (isSunday) {
-                            if (hour < 9 || (hour === 9 && mins < 30)) {
-                                coins = 3;
-                                message = '🎉 Congratulations! You have earned 3 kindness coins!';
-                            }
-                        } else {
-                            if (hour < 7 || (hour === 7 && mins < 45)) {
-                                coins = 3;
-                                message = '🎉 Congratulations! You have earned 3 kindness coins!';
-                            } else if (hour < 8) {
-                                coins = 1;
-                                message = '👏 Well done! You have earned 1 kindness coin!';
-                            }
-                        }
-                    } else {
-                        // Evening - only reward for main tasks before 5pm
-                        if (hour < 17) {
-                            coins = 3;
-                            message = '🎉 Congratulations! You have earned 3 kindness coins!';
-                        }
-                    }
-                    
-                    if (coins > 0) {
-                        const total = addCoins(coins);
-                        localStorage.setItem(completedKey, 'true');
-                        localStorage.setItem(`${completedKey}Coins`, coins.toString());
-                        
-                        document.getElementById('modalTitle').textContent = message;
-                        document.getElementById('modalMessage').textContent = `Total coins: ${total}`;
-                        document.getElementById('modal').classList.add('show');
-                        
-                        setTimeout(() => {
-                            document.getElementById('modal').classList.remove('show');
-                        }, 3000);
-                        
-                        updateProgress();
-                    }
-                }
+        function renderRewards() {
+            if (isSaturday) {
+                document.getElementById('rewardsContainer').innerHTML = '';
+                return;
             }
-
-            // Check dinner completion (evening only)
-            if (!isMorning && !isSaturday && dinnerChecked.length === dinnerItems.length && dinnerItems.length > 0) {
-                const dinnerType = isSunday ? 'sundayEveningDinner' : 'eveningDinner';
-                const dinnerCompletedKey = `${dinnerType}Completed`;
-                const alreadyRewarded = localStorage.getItem(dinnerCompletedKey);
-                
-                if (!alreadyRewarded) {
-                    const now = new Date();
-                    const hour = now.getHours();
-                    
-                    if (hour < 19) {
-                        const total = addCoins(1);
-                        localStorage.setItem(dinnerCompletedKey, 'true');
-                        
-                        document.getElementById('modalTitle').textContent = '🍽️ Great job finishing dinner!';
-                        document.getElementById('modalMessage').textContent = `You earned 1 coin! Total coins: ${total}`;
-                        document.getElementById('modal').classList.add('show');
-                        
-                        setTimeout(() => {
-                            document.getElementById('modal').classList.remove('show');
-                        }, 3000);
-                        
-                        updateProgress();
-                    }
-                }
-            }
+            
+            const rewardConfig = isMorning ? 
+                (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) :
+                CONFIG.rewards.evening;
+            
+            const rewardsHTML = `
+                <h3>🎁 Rewards</h3>
+                <ul>
+                    ${rewardConfig.map((reward, i) => `
+                        <li>
+                            <span>${reward.label}</span>
+                            <span class="timer" id="timer${i + 1}"></span>
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+            
+            document.getElementById('rewardsContainer').innerHTML = rewardsHTML;
         }
 
         function updateTimers() {
-            const now = new Date();
-            let target1, target2;
+            const now = getCurrentTime();
+            const rewardConfig = isMorning ? 
+                (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) :
+                CONFIG.rewards.evening;
             
-            if (isMorning) {
-                if (isSunday) {
-                    target1 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 30, 0);
-                } else {
-                    target1 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 45, 0);
-                    target2 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+            rewardConfig.forEach((reward, i) => {
+                const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), reward.hour, reward.minute, 0);
+                const diff = target - now;
+                
+                const timer = document.getElementById(`timer${i + 1}`);
+                if (timer) {
+                    if (diff <= 0) {
+                        // Check if reward was achieved
+                        const completedKey = reward.isDinner ? 
+                            `${getChecklistType('dinner')}Completed` : 
+                            `${type}Completed`;
+                        const wasCompleted = Storage.get(completedKey);
+                        const coinsEarned = Storage.get(`${completedKey}Coins`, 0);
+                        
+                        if (wasCompleted && coinsEarned === reward.coins) {
+                            timer.textContent = '✓ Achieved!';
+                            timer.className = 'timer achieved';
+                        } else {
+                            timer.textContent = 'Expired';
+                            timer.className = 'timer expired';
+                        }
+                    } else {
+                        const hours = Math.floor(diff / 3600000);
+                        const mins = Math.floor((diff % 3600000) / 60000);
+                        const secs = Math.floor((diff % 60000) / 1000);
+                        timer.textContent = `${hours}h ${mins}m ${secs}s`;
+                        timer.className = 'timer';
+                    }
                 }
-            } else {
-                target1 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0, 0);
-                target2 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 19, 0, 0);
-            }
-
-            function formatTime(ms) {
-                if (ms <= 0) return 'Expired';
-                const hours = Math.floor(ms / 3600000);
-                const mins = Math.floor((ms % 3600000) / 60000);
-                const secs = Math.floor((ms % 60000) / 1000);
-                return `${hours}h ${mins}m ${secs}s`;
-            }
-
-            const diff1 = target1 - now;
-
-            const timer1 = document.getElementById('timer1');
-            if (timer1) {
-                timer1.textContent = formatTime(diff1);
-                timer1.className = diff1 <= 0 ? 'timer expired' : 'timer';
-            }
-
-            if (target2) {
-                const diff2 = target2 - now;
-                const timer2 = document.getElementById('timer2');
-                if (timer2) {
-                    timer2.textContent = formatTime(diff2);
-                    timer2.className = diff2 <= 0 ? 'timer expired' : 'timer';
-                }
-            }
-        }
-
-        function resetCoins() {
-            if (confirm('Reset total coins to 0?')) {
-                localStorage.setItem('totalCoins', '0');
-                updateProgress();
-            }
-        }
-
-        function resetChecklist() {
-            if (confirm('Reset checklist? (Coins will be kept)')) {
-                localStorage.removeItem(`${type}Checked`);
-                localStorage.removeItem(`${type}Completed`);
-                localStorage.removeItem(`${type}CompletedCoins`);
-                
-                if (!isMorning && !isSaturday) {
-                    const dinnerType = isSunday ? 'sundayEveningDinner' : 'eveningDinner';
-                    localStorage.removeItem(`${dinnerType}Checked`);
-                    localStorage.removeItem(`${dinnerType}Completed`);
-                }
-                
-                
-                localStorage.removeItem('morningBonusChecked');
-                localStorage.removeItem('morningBonusRewards');
-                localStorage.removeItem('eveningBonusChecked');
-                localStorage.removeItem('eveningBonusRewards');
-                
-                render();
-            }
+            });
         }
 
         function render() {
-            const items = getItems();
-            const checked = getChecked();
-            const dinnerItems = getDinnerItems();
-            const dinnerChecked = getDinnerChecked();
+            const mainItems = getItems('main');
+            const mainChecked = getChecked('main');
+            const dinnerItems = shouldShowSection('dinner') ? getItems('dinner') : [];
+            const dinnerChecked = shouldShowSection('dinner') ? getChecked('dinner') : [];
             const bonusItems = getBonusItems();
             const bonusChecked = getBonusChecked();
-            const checklist = document.getElementById('checklist');
             
-            let html = items.map((item, i) => `
-                <div class="item ${checked.includes(i) ? 'checked' : ''}">
-                    <input type="checkbox" ${checked.includes(i) ? 'checked' : ''} onchange="toggle(${i})">
+            let html = mainItems.map((item, i) => `
+                <div class="item ${mainChecked.includes(i) ? 'checked' : ''}">
+                    <input type="checkbox" ${mainChecked.includes(i) ? 'checked' : ''} onchange="toggleMain(${i})">
                     <span>${item}</span>
                 </div>
             `).join('');
@@ -616,54 +649,52 @@
                 `).join('');
             }
 
-            checklist.innerHTML = html;
+            document.getElementById('checklist').innerHTML = html;
             updateProgress();
         }
 
-        function toggle(index) {
-            const checked = getChecked();
+        // ============================================================================
+        // EVENT HANDLERS
+        // ============================================================================
+        
+        function toggleMain(index) {
+            const checked = getChecked('main');
             const pos = checked.indexOf(index);
             const completedKey = `${type}Completed`;
-            const wasCompleted = localStorage.getItem(completedKey);
             
             if (pos > -1) {
                 checked.splice(pos, 1);
-                // If was completed and now unchecking, remove the reward
-                if (wasCompleted) {
-                    const coinsEarned = localStorage.getItem(`${completedKey}Coins`);
-                    if (coinsEarned) {
-                        const currentCoins = getCoins();
-                        localStorage.setItem('totalCoins', Math.max(0, currentCoins - parseInt(coinsEarned)).toString());
-                    }
-                    localStorage.removeItem(completedKey);
-                    localStorage.removeItem(`${completedKey}Coins`);
+                if (Storage.get(completedKey)) {
+                    const coinsEarned = Storage.get(`${completedKey}Coins`, 0);
+                    removeCoins(coinsEarned);
+                    Storage.remove(completedKey);
+                    Storage.remove(`${completedKey}Coins`);
                 }
             } else {
                 checked.push(index);
             }
-            saveChecked(checked);
+            
+            saveChecked(checked, 'main');
             render();
         }
 
         function toggleDinner(index) {
-            const checked = getDinnerChecked();
+            const checked = getChecked('dinner');
             const pos = checked.indexOf(index);
-            const dinnerType = isSunday ? 'sundayEveningDinner' : 'eveningDinner';
+            const dinnerType = getChecklistType('dinner');
             const completedKey = `${dinnerType}Completed`;
-            const wasCompleted = localStorage.getItem(completedKey);
             
             if (pos > -1) {
                 checked.splice(pos, 1);
-                // If was completed and now unchecking, remove the reward
-                if (wasCompleted) {
-                    const currentCoins = getCoins();
-                    localStorage.setItem('totalCoins', Math.max(0, currentCoins - 1).toString());
-                    localStorage.removeItem(completedKey);
+                if (Storage.get(completedKey)) {
+                    removeCoins(1);
+                    Storage.remove(completedKey);
                 }
             } else {
                 checked.push(index);
             }
-            saveDinnerChecked(checked);
+            
+            saveChecked(checked, 'dinner');
             render();
         }
 
@@ -673,29 +704,14 @@
             const pos = checked.indexOf(index);
             
             if (pos > -1) {
-                // Unchecking - remove coin
                 checked.splice(pos, 1);
                 if (rewards.includes(index)) {
                     rewards.splice(rewards.indexOf(index), 1);
-                    const currentCoins = getCoins();
-                    localStorage.setItem('totalCoins', Math.max(0, currentCoins - 1).toString());
+                    removeCoins(1);
                 }
             } else {
-                // Checking - add coin
                 checked.push(index);
-                if (!rewards.includes(index)) {
-                    rewards.push(index);
-                    const total = addCoins(1);
-                    saveBonusRewards(rewards);
-                    
-                    document.getElementById('modalTitle').textContent = '⭐ Great job!';
-                    document.getElementById('modalMessage').textContent = `You earned 1 coin! Total coins: ${total}`;
-                    document.getElementById('modal').classList.add('show');
-                    
-                    setTimeout(() => {
-                        document.getElementById('modal').classList.remove('show');
-                    }, 2000);
-                }
+                checkBonusCompletion(index);
             }
             
             saveBonusChecked(checked);
@@ -703,36 +719,80 @@
             render();
         }
 
-        // Reset checklist at midnight for evening, 3pm for morning
-        const lastReset = localStorage.getItem('lastReset');
-        const resetHour = isSaturday ? 0 : (isMorning ? 0 : 15); // Midnight for morning/Saturday, 3pm for evening
-        const nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour);
-        
-        if (!lastReset || new Date(lastReset) < nextReset && now >= nextReset) {
-            localStorage.setItem(`${type}Checked`, JSON.stringify([]));
-            localStorage.removeItem(`${type}Completed`);
-            
-            // Reset dinner checklist for evening
-            if (!isMorning && !isSaturday) {
-                const dinnerType = isSunday ? 'sundayEveningDinner' : 'eveningDinner';
-                localStorage.setItem(`${dinnerType}Checked`, JSON.stringify([]));
-                localStorage.removeItem(`${dinnerType}Completed`);
+        function resetCoins() {
+            if (confirm('Reset total coins to 0?')) {
+                Storage.set('totalCoins', 0);
+                updateProgress();
             }
-            
-            // Reset daily bonus
-            localStorage.setItem('morningBonusChecked', JSON.stringify([]));
-            localStorage.setItem('morningBonusRewards', JSON.stringify([]));
-            localStorage.setItem('eveningBonusChecked', JSON.stringify([]));
-            localStorage.setItem('eveningBonusRewards', JSON.stringify([]));
-            
-            localStorage.setItem('lastReset', now.toISOString());
         }
 
+        function resetChecklist() {
+            if (confirm('Reset checklist? (Coins will be kept)')) {
+                Storage.remove(`${type}Checked`);
+                Storage.remove(`${type}Completed`);
+                Storage.remove(`${type}CompletedCoins`);
+                
+                if (shouldShowSection('dinner')) {
+                    const dinnerType = getChecklistType('dinner');
+                    Storage.remove(`${dinnerType}Checked`);
+                    Storage.remove(`${dinnerType}Completed`);
+                }
+                
+                Storage.remove('morningBonusChecked');
+                Storage.remove('morningBonusRewards');
+                Storage.remove('eveningBonusChecked');
+                Storage.remove('eveningBonusRewards');
+                
+                render();
+            }
+        }
+
+        // ============================================================================
+        // AUTO-RESET LOGIC
+        // ============================================================================
+        
+        function checkAutoReset() {
+            const lastReset = Storage.get('lastReset');
+            const resetHour = isSaturday ? 0 : (isMorning ? 0 : 15);
+            const nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour);
+            
+            if (!lastReset || new Date(lastReset) < nextReset && now >= nextReset) {
+                Storage.set(`${type}Checked`, []);
+                Storage.remove(`${type}Completed`);
+                
+                if (shouldShowSection('dinner')) {
+                    const dinnerType = getChecklistType('dinner');
+                    Storage.set(`${dinnerType}Checked`, []);
+                    Storage.remove(`${dinnerType}Completed`);
+                }
+                
+                Storage.set('morningBonusChecked', []);
+                Storage.set('morningBonusRewards', []);
+                Storage.set('eveningBonusChecked', []);
+                Storage.set('eveningBonusRewards', []);
+                
+                // Reset daily coins at midnight
+                if (resetHour === 0) {
+                    Storage.set('dailyCoins', 0);
+                }
+                
+                Storage.set('lastReset', now.toISOString());
+            }
+        }
+
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+        
+        document.getElementById('title').textContent = title;
+        renderRewards();
+        checkAutoReset();
+        render();
+        
         if (!isSaturday) {
             updateTimers();
             setInterval(updateTimers, 1000);
         }
-        render();
     </script>
 </body>
 </html>
