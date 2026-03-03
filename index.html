@@ -215,8 +215,8 @@
         // ============================================================================
         
         const CONFIG = {
-            morningEndHour: 15,
-            bonusStartHour: 18,
+            morningEndHour: 14,
+            bonusStartHour: 14,
             rewards: {
                 weekdayMorning: [
                     { hour: 7, minute: 45, coins: 3, label: '🌟 Complete before 7:45am = 3 coins' },
@@ -263,6 +263,7 @@
         const dayOfWeek = now.getDay();
         const isSunday = dayOfWeek === 0;
         const isSaturday = dayOfWeek === 6;
+        console.log("DEBUG:", {hour, morningEndHour: CONFIG.morningEndHour, comparison: hour < CONFIG.morningEndHour});
         const isMorning = hour < CONFIG.morningEndHour;
         
         const type = isSaturday ? 'saturday' : 
@@ -479,6 +480,7 @@
                 const total = addCoins(reward.coins);
                 Storage.set(completedKey, true);
                 Storage.set(`${completedKey}Coins`, reward.coins);
+                updateProgress();
                 showModal(reward.message, `Total coins: ${total}`);
             }
         }
@@ -499,6 +501,8 @@
             if (now.getHours() < 19) {
                 const total = addCoins(1);
                 Storage.set(completedKey, true);
+                Storage.set(`${completedKey}Coins`, 1);
+                updateProgress();
                 showModal('🍽️ Great job finishing dinner!', `You earned 1 coin! Total coins: ${total}`);
             }
         }
@@ -506,12 +510,14 @@
         function checkBonusCompletion(index) {
             const rewards = getBonusRewards();
             if (rewards.includes(index)) return;
+            console.log("checkBonusCompletion:", {index, rewards, alreadyRewarded: rewards.includes(index)});
             
             rewards.push(index);
             saveBonusRewards(rewards);
             
             const total = addCoins(1);
             showModal('⭐ Great job!', `You earned 1 coin! Total coins: ${total}`, 2000);
+            console.log("Awarded bonus coin! New total:", total);
         }
 
         // ============================================================================
@@ -596,7 +602,7 @@
                         const wasCompleted = Storage.get(completedKey);
                         const coinsEarned = Storage.get(`${completedKey}Coins`, 0);
                         
-                        if (wasCompleted && coinsEarned === reward.coins) {
+                        if (wasCompleted && coinsEarned >= reward.coins) {
                             timer.textContent = '✓ Achieved!';
                             timer.className = 'timer achieved';
                         } else {
@@ -666,7 +672,9 @@
                 checked.splice(pos, 1);
                 if (Storage.get(completedKey)) {
                     const coinsEarned = Storage.get(`${completedKey}Coins`, 0);
+                    console.log(`BEFORE removeCoins: total=${getCoins()}, daily=${getDailyCoins()}, removing=${coinsEarned}`);
                     removeCoins(coinsEarned);
+                    console.log(`AFTER removeCoins: total=${getCoins()}, daily=${getDailyCoins()}`);
                     Storage.remove(completedKey);
                     Storage.remove(`${completedKey}Coins`);
                 }
@@ -687,7 +695,9 @@
             if (pos > -1) {
                 checked.splice(pos, 1);
                 if (Storage.get(completedKey)) {
-                    removeCoins(1);
+                    const coinsEarned = Storage.get(`${completedKey}Coins`, 0);
+                    removeCoins(coinsEarned);
+                    Storage.remove(`${completedKey}Coins`);
                     Storage.remove(completedKey);
                 }
             } else {
@@ -700,14 +710,18 @@
 
         function toggleBonus(index) {
             const checked = getBonusChecked();
-            const rewards = getBonusRewards();
             const pos = checked.indexOf(index);
             
             if (pos > -1) {
                 checked.splice(pos, 1);
-                if (rewards.includes(index)) {
-                    rewards.splice(rewards.indexOf(index), 1);
+                const rewards = getBonusRewards();
+                const rewardPos = rewards.indexOf(index);
+                console.log('UNCHECKING:', {index, rewardPos, rewards});
+                if (rewardPos > -1) {
+                    rewards.splice(rewardPos, 1);
+                    saveBonusRewards(rewards);
                     removeCoins(1);
+                    console.log('Removed coin. New total:', getCoins());
                 }
             } else {
                 checked.push(index);
@@ -715,7 +729,6 @@
             }
             
             saveBonusChecked(checked);
-            saveBonusRewards(rewards);
             render();
         }
 
