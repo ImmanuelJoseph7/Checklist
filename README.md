@@ -16,10 +16,10 @@ A time-based daily checklist app with a reward system to encourage kids to compl
 ## Daily Schedule
 
 ### Weekdays (Monday-Friday)
-- **Morning checklist**: 12am (midnight) - 3pm
-- **Evening checklist**: 3pm - 12am (midnight)
+- **Morning checklist**: 12am (midnight) - 12pm (noon)
+- **Evening checklist**: 12pm (noon) - 12am (midnight)
 - Morning resets at midnight
-- Evening resets at 3pm
+- Evening resets at noon
 
 ### Saturday
 - **Single all-day checklist** (visible all day)
@@ -27,10 +27,10 @@ A time-based daily checklist app with a reward system to encourage kids to compl
 - No time-based rewards
 
 ### Sunday
-- **Morning checklist**: 12am (midnight) - 3pm
-- **Evening checklist**: 3pm - 12am (midnight)
+- **Morning checklist**: 12am (midnight) - 12pm (noon)
+- **Evening checklist**: 12pm (noon) - 12am (midnight)
 - Morning resets at midnight
-- Evening resets at 3pm
+- Evening resets at noon
 
 ## Checklists
 

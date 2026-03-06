@@ -103,6 +103,7 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            margin-top: 8px;
         }
         .reset-btn {
             padding: 5px 12px;
@@ -194,6 +195,7 @@
                 <div class="progress-fill" id="progress">0%</div>
             </div>
             <div class="coins" id="coins">🪙 Total Kindness Coins: 0</div>
+            <div class="coins" id="dollars">💵 Total Dollars: $0.00</div>
         </div>
         <div class="rewards" id="rewardsContainer"></div>
         <div style="text-align: center; margin-bottom: 10px;">
@@ -215,8 +217,8 @@
         // ============================================================================
         
         const CONFIG = {
-            morningEndHour: 14,
-            bonusStartHour: 14,
+            morningEndHour: 12,
+            bonusStartHour: 12,
             rewards: {
                 weekdayMorning: [
                     { hour: 7, minute: 45, coins: 3, label: '🌟 Complete before 7:45am = 3 coins' },
@@ -243,7 +245,12 @@
             sundayEvening: ['🚽 Poo Poo', '📖 Read Bible'],
             sundayEveningDinner: ['🍽️ Dinner'],
             morningBonus: ['😴 I went to sleep last night without mucking around!'],
-            eveningBonus: ['😊 I used manners today!', '🤗 I was polite by responding to others with a happy smile!']
+            eveningBonus: ['😊 I used manners today!', '🤗 I was polite by responding to others with a happy smile!', '👂 I listened to mummy and daddy immediately!'],
+            jobs: [
+                { text: '🪴 Watered plants with sibling', dollars: 0.50, group: 'watering' },
+                { text: '🪴 Watered plants by myself', dollars: 1.00, group: 'watering' },
+                { text: '🍽️ Empty the dishwasher', dollars: 0.50, group: 'independent' }
+            ]
         };
 
         // ============================================================================
@@ -410,6 +417,58 @@
         }
 
         // ============================================================================
+
+        // ============================================================================
+        // JOBS MANAGEMENT
+        // ============================================================================
+        
+        function shouldShowJobs() {
+            return isSaturday || !isMorning;
+        }
+
+        function getJobsChecked() {
+            if (!shouldShowJobs()) return [];
+            const key = isSaturday ? 'saturdayJobsChecked' : (isSunday ? 'sundayEveningJobsChecked' : 'eveningJobsChecked');
+            return Storage.get(key, []);
+        }
+
+        function saveJobsChecked(checked) {
+            if (!shouldShowJobs()) return;
+            const key = isSaturday ? 'saturdayJobsChecked' : (isSunday ? 'sundayEveningJobsChecked' : 'eveningJobsChecked');
+            Storage.set(key, checked);
+        }
+
+        function getJobsCompleted() {
+            if (!shouldShowJobs()) return [];
+            const key = isSaturday ? 'saturdayJobsCompleted' : (isSunday ? 'sundayEveningJobsCompleted' : 'eveningJobsCompleted');
+            return Storage.get(key, []);
+        }
+
+        function saveJobsCompleted(completed) {
+            if (!shouldShowJobs()) return;
+            const key = isSaturday ? 'saturdayJobsCompleted' : (isSunday ? 'sundayEveningJobsCompleted' : 'eveningJobsCompleted');
+            Storage.set(key, completed);
+        }
+
+        function checkJobsCompletion(index) {
+            if (!shouldShowJobs()) return;
+            
+            const completed = getJobsCompleted();
+            if (completed.includes(index)) return;
+            
+            const job = DEFAULT_ITEMS.jobs[index];
+            const total = addDollars(job.dollars);
+            const daily = getDailyDollars();
+            completed.push(index);
+            saveJobsCompleted(completed);
+            
+            const dollarStr = job.dollars === 1 ? '$1' : `${Math.round(job.dollars * 100)}¢`;
+            showModal(`💵 You earned ${dollarStr}!`, `Today: ${formatDollars(daily)} | Total: ${formatDollars(total)}`);
+        }
+
+        function formatDollars(amount) {
+            return `$${amount.toFixed(2)}`;
+        }
         // COINS MANAGEMENT
         // ============================================================================
         
@@ -437,6 +496,34 @@
             return total;
         }
 
+
+        // ============================================================================
+        // DOLLAR TRACKING (JOBS)
+        // ============================================================================
+        
+        function getDollars() {
+            return Storage.get('totalDollars', 0);
+        }
+
+        function getDailyDollars() {
+            return Storage.get('dailyDollars', 0);
+        }
+
+        function addDollars(amount) {
+            const total = getDollars() + amount;
+            const daily = getDailyDollars() + amount;
+            Storage.set('totalDollars', total);
+            Storage.set('dailyDollars', daily);
+            return total;
+        }
+
+        function removeDollars(amount) {
+            const total = Math.max(0, getDollars() - amount);
+            const daily = Math.max(0, getDailyDollars() - amount);
+            Storage.set('totalDollars', total);
+            Storage.set('dailyDollars', daily);
+            return total;
+        }
         // ============================================================================
         // REWARD LOGIC
         // ============================================================================
@@ -553,6 +640,11 @@
                 <button class="reset-btn" onclick="resetCoins()">Reset Total</button>
             `;
             
+            document.getElementById('dollars').innerHTML = `
+                💵 Total: ${formatDollars(getDollars())} | Today: ${formatDollars(getDailyDollars())} 
+                <button class="reset-btn" onclick="resetDollars()">Reset Total</button>
+            `;
+            
             checkMainCompletion();
             checkDinnerCompletion();
         }
@@ -655,6 +747,22 @@
                 `).join('');
             }
 
+
+            if (shouldShowJobs()) {
+                const jobsChecked = getJobsChecked();
+                const totalDollars = getDollars();
+                html += `<div class="section-title">💵 Jobs (Total: ${formatDollars(totalDollars)})</div>`;
+                html += DEFAULT_ITEMS.jobs.map((job, i) => {
+                    const dollarStr = job.dollars === 1 ? '$1' : `${Math.round(job.dollars * 100)}¢`;
+                    const isChecked = jobsChecked.includes(i);
+                    return `
+                        <div class="item ${isChecked ? 'checked' : ''}">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleJob(${i})">
+                            <span>${job.text} - ${dollarStr}</span>
+                        </div>
+                    `;
+                }).join('');
+            }
             document.getElementById('checklist').innerHTML = html;
             updateProgress();
         }
@@ -732,10 +840,60 @@
             render();
         }
 
+
+        function toggleJob(index) {
+            const checked = getJobsChecked();
+            const completed = getJobsCompleted();
+            const job = DEFAULT_ITEMS.jobs[index];
+            const pos = checked.indexOf(index);
+            
+            if (pos > -1) {
+                // Unchecking
+                checked.splice(pos, 1);
+                const completedPos = completed.indexOf(index);
+                if (completedPos > -1) {
+                    completed.splice(completedPos, 1);
+                    removeDollars(job.dollars);
+                }
+                saveJobsChecked(checked);
+                saveJobsCompleted(completed);
+            } else {
+                // Checking
+                if (job.group === 'watering') {
+                    // Uncheck other watering jobs
+                    DEFAULT_ITEMS.jobs.forEach((j, i) => {
+                        if (j.group === 'watering' && i !== index) {
+                            const waterPos = checked.indexOf(i);
+                            if (waterPos > -1) {
+                                checked.splice(waterPos, 1);
+                                const waterCompletedPos = completed.indexOf(i);
+                                if (waterCompletedPos > -1) {
+                                    completed.splice(waterCompletedPos, 1);
+                                    removeDollars(j.dollars);
+                                }
+                            }
+                        }
+                    });
+                }
+                checked.push(index);
+                saveJobsChecked(checked);
+                saveJobsCompleted(completed);
+                checkJobsCompletion(index);
+            }
+            
+            render();
+        }
         function resetCoins() {
             if (confirm('Reset total coins to 0?')) {
                 Storage.set('totalCoins', 0);
                 updateProgress();
+            }
+        }
+
+        function resetDollars() {
+            if (confirm('Reset total dollars to $0.00?')) {
+                Storage.set('totalDollars', 0);
+                render();
             }
         }
 
@@ -766,7 +924,7 @@
         
         function checkAutoReset() {
             const lastReset = Storage.get('lastReset');
-            const resetHour = isSaturday ? 0 : (isMorning ? 0 : 15);
+            const resetHour = isSaturday ? 0 : (isMorning ? 0 : 12);
             const nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour);
             
             if (!lastReset || new Date(lastReset) < nextReset && now >= nextReset) {
@@ -784,9 +942,21 @@
                 Storage.set('eveningBonusChecked', []);
                 Storage.set('eveningBonusRewards', []);
                 
+                
+                // Reset jobs
+                Storage.remove('eveningJobsChecked');
+                Storage.remove('eveningJobsCompleted');
+                Storage.remove('eveningJobsCompletedDollars');
+                Storage.remove('sundayEveningJobsChecked');
+                Storage.remove('sundayEveningJobsCompleted');
+                Storage.remove('sundayEveningJobsCompletedDollars');
+                Storage.remove('saturdayJobsChecked');
+                Storage.remove('saturdayJobsCompleted');
+                Storage.remove('saturdayJobsCompletedDollars');
                 // Reset daily coins at midnight
                 if (resetHour === 0) {
                     Storage.set('dailyCoins', 0);
+                    Storage.set('dailyDollars', 0);
                 }
                 
                 Storage.set('lastReset', now.toISOString());
