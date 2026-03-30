@@ -219,6 +219,12 @@
         const CONFIG = {
             morningEndHour: 12,
             bonusStartHour: 12,
+            termDates: [
+                { start: '2026-01-27', end: '2026-04-02' },
+                { start: '2026-04-21', end: '2026-06-26' },
+                { start: '2026-07-15', end: '2026-09-18' },
+                { start: '2026-10-06', end: '2026-11-27' }
+            ],
             rewards: {
                 weekdayMorning: [
                     { hour: 7, minute: 45, coins: 3, label: '🌟 Complete before 7:45am = 3 coins' },
@@ -232,7 +238,14 @@
                     { hour: 18, minute: 0, coins: 1, label: '⭐ Complete main tasks before 6:00pm = 1 coin' },
                     { hour: 19, minute: 0, coins: 1, label: '🍽️ Finish dinner by 7:00pm = 1 coin', isDinner: true }
                 ],
-                saturday: { coins: 3 }
+                saturday: { coins: 3 },
+                holidayMorning: [
+                    { hour: 12, minute: 0, coins: 3, label: '🌟 Complete morning tasks before noon = 3 coins' }
+                ],
+                holidayAfternoon: [
+                    { hour: 19, minute: 0, coins: 3, label: '🌟 Complete afternoon tasks before 7:00pm = 3 coins' }
+                ],
+                tvUnlock: { hour: 14, minute: 30 }
             }
         };
 
@@ -240,10 +253,14 @@
             morning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🪥 Brush Teeth', '💧 Wash face', '🧴 Moisturise', '👔 Wear uniform', '🍱 Pack lunchbag', '💧 Pack water bottle', '🎒 Pack bag', '🍳 Eat breakfast', '👟 Put on socks & shoes'],
             evening: ['🍱 Put lunchbox in sink (finish food if not empty)', '🧊 Put ice pack FLAT in freezer', '🚽 Poo Poo', '🚿 Shower', '🧴 Moisturise', '📝 Homework', '📚 Library Book', '📖 Read Bible'],
             eveningDinner: ['🍽️ Dinner'],
-            saturday: ['🙏 Pray', '🛏️ Make Bed', '💧 Wash face', '🚽 Wee Wee', '🚿 Shower', '🪥 Brush Teeth', '🧴 Moisturise', '👕 Wear Clothes', '🍳 Eat breakfast', '💧 Fill water bottle', '🍽️ Eat lunch', '🚽 Poo Poo', '🍽️ Eat dinner', '📖 Read Bible'],
-            sundayMorning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🚿 Shower', '🪥 Brush Teeth', '💧 Wash face', '🧴 Moisturise', '👕 Wear Clothes', '💧 Fill water bottle', '🥞 Eat breakfast', '👟 Put on socks & shoes'],
+            saturday: ['🙏 Pray', '🛏️ Make Bed', '💧 Wash face', '🚽 Wee Wee', '🚿 Shower', '🪥 Brush Teeth', '🧴 Moisturise', '👕 Get Dressed', '🍳 Eat breakfast', '💧 Fill water bottle', '🍽️ Eat lunch', '🚽 Poo Poo', '🍽️ Eat dinner', '📖 Read Bible'],
+            sundayMorning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🚿 Shower', '🪥 Brush Teeth', '💧 Wash face', '🧴 Moisturise', '👕 Get Dressed', '💧 Fill water bottle', '🥞 Eat breakfast', '👟 Put on socks & shoes'],
             sundayEvening: ['🚽 Poo Poo', '📖 Read Bible'],
             sundayEveningDinner: ['🍽️ Dinner'],
+            holidayMorning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🪥 Brush Teeth', '💧 Wash face', '🚽 Poo Poo', '🚿 Shower', '🧴 Moisturise', '👕 Get Dressed', '🍳 Eat breakfast', '📚 Read for 30 minutes', '🤝 Play with sibling without fighting for 30 minutes', '📖 Read Bible'],
+            holidayAfternoon: ['🍽️ Eat lunch', '📚 Read for 30 minutes', '🌳 Play outside for 30 minutes'],
+            holidayAfternoonDinner: ['🍽️ Dinner'],
+            holidayDinner: ['🍽️ Dinner'],
             morningBonus: ['😴 I went to sleep last night without mucking around!'],
             eveningBonus: ['😊 I used manners today!', '🤗 I was polite by responding to others with a happy smile!', '👂 I listened to mummy and daddy immediately!'],
             jobs: [
@@ -258,7 +275,7 @@
         // ============================================================================
         
         // TEST MODE: Set to a specific date/time for testing, or null for real time
-        // const TEST_TIME = new Date(2026, 2, 2, 17, 30, 0); // 5:30pm Monday
+        // const TEST_TIME = new Date(2026, 3, 10, 14, 0, 0); // 2pm Friday April 10 (school holidays)
         const TEST_TIME = null; // Real time
         
         function getCurrentTime() {
@@ -270,15 +287,27 @@
         const dayOfWeek = now.getDay();
         const isSunday = dayOfWeek === 0;
         const isSaturday = dayOfWeek === 6;
-        console.log("DEBUG:", {hour, morningEndHour: CONFIG.morningEndHour, comparison: hour < CONFIG.morningEndHour});
+        const isWeekday = !isSaturday && !isSunday;
         const isMorning = hour < CONFIG.morningEndHour;
-        
-        const type = isSaturday ? 'saturday' : 
+
+        function isHolidayDate(date) {
+            if (!isWeekday) return false;
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${y}-${m}-${d}`;
+            return !CONFIG.termDates.some(t => dateStr >= t.start && dateStr <= t.end);
+        }
+        const isHoliday = isHolidayDate(now);
+
+        const type = isSaturday ? 'saturday' :
                      isSunday ? (isMorning ? 'sundayMorning' : 'sundayEvening') :
+                     isHoliday ? 'holiday' :
                      (isMorning ? 'morning' : 'evening');
-        
+
         const title = isSaturday ? '☀️ Saturday Checklist' :
                       isSunday ? (isMorning ? '☀️ Sunday Morning Checklist' : '🌙 Sunday Evening Checklist') :
+                      isHoliday ? '🏖️ Holiday Checklist' :
                       (isMorning ? '🌅 Morning Checklist' : '🌙 Evening Checklist');
 
         // ============================================================================
@@ -304,7 +333,9 @@
         
         function getChecklistType(section = 'main') {
             if (section === 'dinner') {
-                return isSunday ? 'sundayEveningDinner' : 'eveningDinner';
+                if (isSunday) return 'sundayEveningDinner';
+                if (isHoliday) return 'holidayDinner';
+                return 'eveningDinner';
             }
             if (section === 'bonus') {
                 return isMorning ? 'morningBonus' : 'eveningBonus';
@@ -313,6 +344,9 @@
         }
 
         function getItems(section = 'main') {
+            if (section === 'main' && isHoliday) {
+                return [...DEFAULT_ITEMS.holidayMorning, ...DEFAULT_ITEMS.holidayAfternoon];
+            }
             const checklistType = section === 'main' ? type : getChecklistType(section);
             return Storage.get(`${checklistType}Items`, DEFAULT_ITEMS[checklistType] || []);
         }
@@ -426,28 +460,31 @@
             return isSaturday || !isMorning;
         }
 
+        function getJobsKey(suffix) {
+            if (isSaturday) return `saturday${suffix}`;
+            if (isSunday) return `sundayEvening${suffix}`;
+            if (isHoliday) return `holidayAfternoon${suffix}`;
+            return `evening${suffix}`;
+        }
+
         function getJobsChecked() {
             if (!shouldShowJobs()) return [];
-            const key = isSaturday ? 'saturdayJobsChecked' : (isSunday ? 'sundayEveningJobsChecked' : 'eveningJobsChecked');
-            return Storage.get(key, []);
+            return Storage.get(getJobsKey('JobsChecked'), []);
         }
 
         function saveJobsChecked(checked) {
             if (!shouldShowJobs()) return;
-            const key = isSaturday ? 'saturdayJobsChecked' : (isSunday ? 'sundayEveningJobsChecked' : 'eveningJobsChecked');
-            Storage.set(key, checked);
+            Storage.set(getJobsKey('JobsChecked'), checked);
         }
 
         function getJobsCompleted() {
             if (!shouldShowJobs()) return [];
-            const key = isSaturday ? 'saturdayJobsCompleted' : (isSunday ? 'sundayEveningJobsCompleted' : 'eveningJobsCompleted');
-            return Storage.get(key, []);
+            return Storage.get(getJobsKey('JobsCompleted'), []);
         }
 
         function saveJobsCompleted(completed) {
             if (!shouldShowJobs()) return;
-            const key = isSaturday ? 'saturdayJobsCompleted' : (isSunday ? 'sundayEveningJobsCompleted' : 'eveningJobsCompleted');
-            Storage.set(key, completed);
+            Storage.set(getJobsKey('JobsCompleted'), completed);
         }
 
         function checkJobsCompletion(index) {
@@ -528,13 +565,23 @@
         // REWARD LOGIC
         // ============================================================================
         
-        function calculateReward() {
+        function calculateReward(section = 'morning') {
             const now = getCurrentTime();
             const hour = now.getHours();
             const mins = now.getMinutes();
             
             if (isSaturday) {
                 return { coins: CONFIG.rewards.saturday.coins, message: '🎉 Congratulations! You have earned 3 kindness coins!' };
+            }
+
+            if (isHoliday) {
+                const rewardConfig = section === 'morning' ? CONFIG.rewards.holidayMorning : CONFIG.rewards.holidayAfternoon;
+                for (const reward of rewardConfig) {
+                    if (hour < reward.hour || (hour === reward.hour && mins < reward.minute)) {
+                        return { coins: reward.coins, message: '🎉 Congratulations! You have earned 3 kindness coins!' };
+                    }
+                }
+                return { coins: 0, message: '' };
             }
             
             const rewardConfig = isMorning ? 
@@ -554,6 +601,13 @@
         }
 
         function checkMainCompletion() {
+            if (isHoliday) {
+                checkHolidayMorningCompletion();
+                checkHolidayAfternoonCompletion();
+                checkTVUnlock();
+                return;
+            }
+
             const items = getItems('main');
             const checked = getChecked('main');
             
@@ -569,6 +623,91 @@
                 Storage.set(`${completedKey}Coins`, reward.coins);
                 updateProgress();
                 showModal(reward.message, `Total coins: ${total}`);
+            }
+        }
+
+        function checkHolidayMorningCompletion() {
+            const morningItems = DEFAULT_ITEMS.holidayMorning;
+            const checked = getChecked('main');
+            const morningCount = morningItems.length;
+            const morningChecked = checked.filter(i => i < morningCount);
+            if (morningChecked.length !== morningCount) return;
+
+            const completedKey = 'holidayMorningCompleted';
+            if (Storage.get(completedKey)) return;
+
+            const reward = calculateReward('morning');
+            if (reward.coins > 0) {
+                const total = addCoins(reward.coins);
+                Storage.set(completedKey, true);
+                Storage.set(`${completedKey}Coins`, reward.coins);
+                updateProgress();
+                showModal(reward.message, `Total coins: ${total}`);
+            }
+        }
+
+        function checkHolidayAfternoonCompletion() {
+            const morningItems = DEFAULT_ITEMS.holidayMorning;
+            const afternoonItems = DEFAULT_ITEMS.holidayAfternoon;
+            const checked = getChecked('main');
+            const morningCount = morningItems.length;
+            const afternoonChecked = checked.filter(i => i >= morningCount && i < morningCount + afternoonItems.length);
+            if (afternoonChecked.length !== afternoonItems.length) return;
+
+            const completedKey = 'holidayAfternoonCompleted';
+            if (Storage.get(completedKey)) return;
+
+            const reward = calculateReward('afternoon');
+            if (reward.coins > 0) {
+                const total = addCoins(reward.coins);
+                Storage.set(completedKey, true);
+                Storage.set(`${completedKey}Coins`, reward.coins);
+                updateProgress();
+                showModal(reward.message, `Total coins: ${total}`);
+            }
+        }
+
+        function checkTVUnlock() {
+            const morningItems = DEFAULT_ITEMS.holidayMorning;
+            const afternoonItems = DEFAULT_ITEMS.holidayAfternoon;
+            const checked = getChecked('main');
+            const morningCount = morningItems.length;
+
+            // All morning items checked
+            const morningDone = morningItems.every((_, i) => checked.includes(i));
+            // Lunch is first item in afternoon section
+            const lunchIndex = morningCount; // index of '🍽️ Eat lunch'
+            const lunchDone = checked.includes(lunchIndex);
+
+            const now = getCurrentTime();
+            const tv = CONFIG.rewards.tvUnlock;
+            const beforeDeadline = now.getHours() < tv.hour || (now.getHours() === tv.hour && now.getMinutes() < tv.minute);
+
+            const unlocked = morningDone && lunchDone && beforeDeadline;
+            const alreadyShown = Storage.get('holidayTVUnlockShown');
+
+            if (unlocked && !alreadyShown) {
+                Storage.set('holidayTVUnlockShown', true);
+                showModal('📺 TV Time Unlocked!', 'Great job! You can watch TV or use a device!', 4000);
+            }
+
+            renderTVBanner(unlocked);
+        }
+
+        function renderTVBanner(unlocked) {
+            let banner = document.getElementById('tvBanner');
+            if (!isHoliday) { if (banner) banner.remove(); return; }
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'tvBanner';
+                banner.style.cssText = 'background:#4CAF50;color:white;text-align:center;padding:12px;border-radius:8px;font-size:18px;font-weight:bold;margin-bottom:10px;display:none;';
+                document.querySelector('.container').insertBefore(banner, document.getElementById('checklist'));
+            }
+            if (unlocked) {
+                banner.textContent = '📺 TV / Device Time Unlocked!';
+                banner.style.display = 'block';
+            } else {
+                banner.style.display = 'none';
             }
         }
 
@@ -654,10 +793,13 @@
                 document.getElementById('rewardsContainer').innerHTML = '';
                 return;
             }
-            
-            const rewardConfig = isMorning ? 
-                (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) :
-                CONFIG.rewards.evening;
+
+            let rewardConfig;
+            if (isHoliday) {
+                rewardConfig = [...CONFIG.rewards.holidayMorning, ...CONFIG.rewards.holidayAfternoon];
+            } else {
+                rewardConfig = isMorning ? (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) : CONFIG.rewards.evening;
+            }
             
             const rewardsHTML = `
                 <h3>🎁 Rewards</h3>
@@ -676,9 +818,9 @@
 
         function updateTimers() {
             const now = getCurrentTime();
-            const rewardConfig = isMorning ? 
-                (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) :
-                CONFIG.rewards.evening;
+            const rewardConfig = isHoliday
+                ? [...CONFIG.rewards.holidayMorning, ...CONFIG.rewards.holidayAfternoon]
+                : isMorning ? (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) : CONFIG.rewards.evening;
             
             rewardConfig.forEach((reward, i) => {
                 const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), reward.hour, reward.minute, 0);
@@ -688,9 +830,16 @@
                 if (timer) {
                     if (diff <= 0) {
                         // Check if reward was achieved
-                        const completedKey = reward.isDinner ? 
-                            `${getChecklistType('dinner')}Completed` : 
-                            `${type}Completed`;
+                        let completedKey;
+                        if (reward.isDinner) {
+                            completedKey = `${getChecklistType('dinner')}Completed`;
+                        } else if (isHoliday && reward.hour <= 12) {
+                            completedKey = 'holidayMorningCompleted';
+                        } else if (isHoliday) {
+                            completedKey = 'holidayAfternoonCompleted';
+                        } else {
+                            completedKey = `${type}Completed`;
+                        }
                         const wasCompleted = Storage.get(completedKey);
                         const coinsEarned = Storage.get(`${completedKey}Coins`, 0);
                         
@@ -720,12 +869,35 @@
             const bonusItems = getBonusItems();
             const bonusChecked = getBonusChecked();
             
-            let html = mainItems.map((item, i) => `
-                <div class="item ${mainChecked.includes(i) ? 'checked' : ''}">
-                    <input type="checkbox" ${mainChecked.includes(i) ? 'checked' : ''} onchange="toggleMain(${i})">
-                    <span>${item}</span>
-                </div>
-            `).join('');
+            let html = '';
+            if (isHoliday) {
+                const morningItems = DEFAULT_ITEMS.holidayMorning;
+                const afternoonItems = DEFAULT_ITEMS.holidayAfternoon;
+                html += '<div class="section-title">☀️ Morning Tasks</div>';
+                html += morningItems.map((item, i) => `
+                    <div class="item ${mainChecked.includes(i) ? 'checked' : ''}">
+                        <input type="checkbox" ${mainChecked.includes(i) ? 'checked' : ''} onchange="toggleMain(${i})">
+                        <span>${item}</span>
+                    </div>
+                `).join('');
+                html += '<div class="section-title">🌤️ Afternoon Tasks</div>';
+                html += afternoonItems.map((item, i) => {
+                    const idx = morningItems.length + i;
+                    return `
+                        <div class="item ${mainChecked.includes(idx) ? 'checked' : ''}">
+                            <input type="checkbox" ${mainChecked.includes(idx) ? 'checked' : ''} onchange="toggleMain(${idx})">
+                            <span>${item}</span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                html += mainItems.map((item, i) => `
+                    <div class="item ${mainChecked.includes(i) ? 'checked' : ''}">
+                        <input type="checkbox" ${mainChecked.includes(i) ? 'checked' : ''} onchange="toggleMain(${i})">
+                        <span>${item}</span>
+                    </div>
+                `).join('');
+            }
 
             if (dinnerItems.length > 0) {
                 html += '<div class="section-title">🍽️ Dinner (separate reward)</div>';
@@ -765,6 +937,7 @@
             }
             document.getElementById('checklist').innerHTML = html;
             updateProgress();
+            if (isHoliday) checkTVUnlock();
         }
 
         // ============================================================================
@@ -774,17 +947,33 @@
         function toggleMain(index) {
             const checked = getChecked('main');
             const pos = checked.indexOf(index);
-            const completedKey = `${type}Completed`;
-            
+
             if (pos > -1) {
                 checked.splice(pos, 1);
-                if (Storage.get(completedKey)) {
-                    const coinsEarned = Storage.get(`${completedKey}Coins`, 0);
-                    console.log(`BEFORE removeCoins: total=${getCoins()}, daily=${getDailyCoins()}, removing=${coinsEarned}`);
-                    removeCoins(coinsEarned);
-                    console.log(`AFTER removeCoins: total=${getCoins()}, daily=${getDailyCoins()}`);
-                    Storage.remove(completedKey);
-                    Storage.remove(`${completedKey}Coins`);
+                if (isHoliday) {
+                    const morningCount = DEFAULT_ITEMS.holidayMorning.length;
+                    const isMorningItem = index < morningCount;
+                    const mKey = 'holidayMorningCompleted';
+                    const aKey = 'holidayAfternoonCompleted';
+                    // Unchecking a morning item invalidates morning reward
+                    if (isMorningItem && Storage.get(mKey)) {
+                        removeCoins(Storage.get(`${mKey}Coins`, 0));
+                        Storage.remove(mKey);
+                        Storage.remove(`${mKey}Coins`);
+                    }
+                    // Unchecking any item invalidates afternoon reward
+                    if (Storage.get(aKey)) {
+                        removeCoins(Storage.get(`${aKey}Coins`, 0));
+                        Storage.remove(aKey);
+                        Storage.remove(`${aKey}Coins`);
+                    }
+                } else {
+                    const completedKey = `${type}Completed`;
+                    if (Storage.get(completedKey)) {
+                        removeCoins(Storage.get(`${completedKey}Coins`, 0));
+                        Storage.remove(completedKey);
+                        Storage.remove(`${completedKey}Coins`);
+                    }
                 }
             } else {
                 checked.push(index);
@@ -902,6 +1091,14 @@
                 Storage.remove(`${type}Checked`);
                 Storage.remove(`${type}Completed`);
                 Storage.remove(`${type}CompletedCoins`);
+
+                if (isHoliday) {
+                    Storage.remove('holidayMorningCompleted');
+                    Storage.remove('holidayMorningCompletedCoins');
+                    Storage.remove('holidayAfternoonCompleted');
+                    Storage.remove('holidayAfternoonCompletedCoins');
+                    Storage.remove('holidayTVUnlockShown');
+                }
                 
                 if (shouldShowSection('dinner')) {
                     const dinnerType = getChecklistType('dinner');
@@ -953,6 +1150,9 @@
                 Storage.remove('saturdayJobsChecked');
                 Storage.remove('saturdayJobsCompleted');
                 Storage.remove('saturdayJobsCompletedDollars');
+                Storage.remove('holidayAfternoonJobsChecked');
+                Storage.remove('holidayAfternoonJobsCompleted');
+                Storage.remove('holidayAfternoonJobsCompletedDollars');
                 // Reset daily coins at midnight
                 if (resetHour === 0) {
                     Storage.set('dailyCoins', 0);
