@@ -1248,23 +1248,21 @@
         })();
 
         function syncToSupabase() {
-            if (!PROFILE_ID) return;
-            const today = new Date().toISOString().split('T')[0];
-            const dailyCoins = getDailyCoins();
-            const dailyDollars = getDailyDollars();
-            const checked = getChecked('main');
-
-            // Fire and forget - don't await, don't block UI
-            DB.upsertDailyLog({
-                profile_id: PROFILE_ID,
-                date: today,
-                checklist_slug: type,
-                section: 'main',
-                checked_items: checked,
-                coins_earned: dailyCoins,
-                dollars_earned: dailyDollars,
-                completed_at: Storage.get(`${type}Completed`) ? new Date().toISOString() : null
-            }).catch(e => console.error('Sync failed:', e)); // log errors
+            if (!PROFILE_ID || !sb) return;
+            // Delay slightly to let completed flag be set first
+            setTimeout(() => {
+                const today = new Date().toISOString().split('T')[0];
+                DB.upsertDailyLog({
+                    profile_id: PROFILE_ID,
+                    date: today,
+                    checklist_slug: type,
+                    section: 'main',
+                    checked_items: getChecked('main'),
+                    coins_earned: getDailyCoins(),
+                    dollars_earned: getDailyDollars(),
+                    completed_at: Storage.get(`${type}Completed`) ? new Date().toISOString() : null
+                }).catch(e => console.error('Sync failed:', e));
+            }, 100);
         }
 
         // Patch addCoins/addDollars to trigger sync
