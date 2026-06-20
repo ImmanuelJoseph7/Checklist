@@ -328,7 +328,8 @@
         const Storage = {
             get(key, defaultValue = null) {
                 const value = localStorage.getItem(key);
-                return value ? JSON.parse(value) : defaultValue;
+                if (!value) return defaultValue;
+                try { return JSON.parse(value); } catch(e) { return value; }
             },
             set(key, value) {
                 localStorage.setItem(key, JSON.stringify(value));
