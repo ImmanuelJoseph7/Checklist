@@ -189,6 +189,11 @@
 </head>
 <body>
     <div class="container">
+        <div style="display:flex;gap:8px;margin-bottom:10px;font-size:13px;">
+            <a href="index.html" style="padding:6px 10px;background:#4CAF50;color:white;border-radius:4px;text-decoration:none;">✅ Checklist</a>
+            <a href="history.html" style="padding:6px 10px;background:white;color:#333;border-radius:4px;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,0.1);">📅 History</a>
+            <a href="login.html" onclick="Session.clear()" style="padding:6px 10px;background:white;color:#333;border-radius:4px;text-decoration:none;box-shadow:0 1px 3px rgba(0,0,0,0.1);margin-left:auto;">🚪 Switch</a>
+        </div>
         <h1 id="title"></h1>
         <div class="progress-container">
             <div class="progress-bar">
@@ -210,6 +215,25 @@
             <p id="modalMessage"></p>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script>
+        // Auth check - redirect to login if no profile selected
+        if (!Session.isLoggedIn()) {
+            window.location.href = 'login.html';
+        }
+        const PROFILE_ID = Session.getProfileId();
+
+        // Preload checklist data from Supabase (async, writes to localStorage for main script)
+        (async () => {
+            try {
+                const [checklists, config] = await Promise.all([DB.getAllChecklists(), DB.getConfig()]);
+                localStorage.setItem('sb_checklists', JSON.stringify(checklists));
+                localStorage.setItem('sb_config', JSON.stringify(config));
+            } catch(e) { /* offline - use cached */ }
+        })();
+    </script>
 
     <script>
         // ============================================================================
@@ -269,6 +293,46 @@
                 { text: '🍽️ Empty the dishwasher', dollars: 0.50, group: 'independent' }
             ]
         };
+
+        // Override DEFAULT_ITEMS with Supabase data if available (cached from preload or previous session)
+        (function loadFromSupabase() {
+            const cached = localStorage.getItem('sb_checklists');
+            if (!cached) return;
+            try {
+                const checklists = JSON.parse(cached);
+                checklists.forEach(cl => {
+                    const items = (cl.checklist_items || []).sort((a,b) => a.sort_order - b.sort_order);
+                    const mainItems = items.filter(i => i.section === 'main').map(i => i.text);
+                    const dinnerItems = items.filter(i => i.section === 'dinner').map(i => i.text);
+                    const bonusItems = items.filter(i => i.section === 'bonus').map(i => i.text);
+                    const afternoonItems = items.filter(i => i.section === 'afternoon').map(i => i.text);
+                    const jobItems = items.filter(i => i.section === 'jobs').map(i => ({ text: i.text, dollars: parseFloat(i.dollars) || 0, group: i.job_group || 'independent' }));
+
+                    if (mainItems.length > 0) DEFAULT_ITEMS[cl.slug] = mainItems;
+                    if (dinnerItems.length > 0) DEFAULT_ITEMS[cl.slug + 'Dinner'] = dinnerItems;
+                    if (bonusItems.length > 0) {
+                        if (cl.slug === 'morning') DEFAULT_ITEMS.morningBonus = bonusItems;
+                        else if (cl.slug === 'evening') DEFAULT_ITEMS.eveningBonus = bonusItems;
+                    }
+                    if (afternoonItems.length > 0 && cl.slug === 'holiday') DEFAULT_ITEMS.holidayAfternoon = afternoonItems;
+                    if (cl.slug === 'holiday' && mainItems.length > 0) DEFAULT_ITEMS.holidayMorning = mainItems;
+                    if (jobItems.length > 0 && (cl.slug === 'evening' || cl.slug === 'saturday')) DEFAULT_ITEMS.jobs = jobItems;
+                });
+            } catch(e) { /* use hardcoded defaults */ }
+
+            // Override CONFIG term dates
+            const cachedConfig = localStorage.getItem('sb_config');
+            if (cachedConfig) {
+                try {
+                    const config = JSON.parse(cachedConfig);
+                    if (config.term_dates) CONFIG.termDates = config.term_dates;
+                    if (config.morning_end_hour) CONFIG.morningEndHour = config.morning_end_hour;
+                    if (config.bonus_start_hour) CONFIG.bonusStartHour = config.bonus_start_hour;
+                    if (config.tv_unlock_hour) CONFIG.rewards.tvUnlock.hour = config.tv_unlock_hour;
+                    if (config.tv_unlock_minute) CONFIG.rewards.tvUnlock.minute = config.tv_unlock_minute;
+                } catch(e) {}
+            }
+        })();
 
         // ============================================================================
         // TIME & CONTEXT STATE
@@ -1164,6 +1228,44 @@
         }
 
         // ============================================================================
+        // SUPABASE SYNC (non-blocking, won't break offline)
+        // ============================================================================
+
+        function syncToSupabase() {
+            if (!PROFILE_ID) return;
+            const today = new Date().toISOString().split('T')[0];
+            const dailyCoins = getDailyCoins();
+            const dailyDollars = getDailyDollars();
+            const checked = getChecked('main');
+
+            // Fire and forget - don't await, don't block UI
+            DB.upsertDailyLog({
+                profile_id: PROFILE_ID,
+                date: today,
+                checklist_slug: type,
+                section: 'main',
+                checked_items: checked,
+                coins_earned: dailyCoins,
+                dollars_earned: dailyDollars,
+                completed_at: Storage.get(`${type}Completed`) ? new Date().toISOString() : null
+            }).catch(() => {}); // silently fail offline
+        }
+
+        // Patch addCoins/addDollars to trigger sync
+        const _origAddCoins = addCoins;
+        addCoins = function(amount) {
+            const result = _origAddCoins(amount);
+            syncToSupabase();
+            return result;
+        };
+        const _origAddDollars = addDollars;
+        addDollars = function(amount) {
+            const result = _origAddDollars(amount);
+            syncToSupabase();
+            return result;
+        };
+
+        // ============================================================================
         // INITIALIZATION
         // ============================================================================
         
@@ -1171,6 +1273,7 @@
         renderRewards();
         checkAutoReset();
         render();
+        syncToSupabase(); // initial sync
         
         if (!isSaturday) {
             updateTimers();
