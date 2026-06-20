@@ -227,6 +227,8 @@
                         </ul>
                         <div class="add-form">
                             <input id="add-${cl.id}-${sec}" placeholder="New item text...">
+                            ${sec === 'jobs' ? `<input id="add-dollars-${cl.id}-${sec}" placeholder="$" style="width:60px;">` : ''}
+                            ${sec === 'chores' ? `<input id="add-coins-${cl.id}-${sec}" placeholder="Coins" style="width:60px;">` : ''}
                             <button class="btn btn-sm btn-success" onclick="addItem('${cl.id}','${sec}','add-${cl.id}-${sec}',${sitems.length + 1})">+</button>
                         </div></div>
                     `).join('')}
@@ -238,7 +240,16 @@
             const input = document.getElementById(inputId);
             const text = input.value.trim();
             if (!text) return;
-            await sb.from('checklist_items').insert({ checklist_id: checklistId, text, section, sort_order: order });
+            const item = { checklist_id: checklistId, text, section, sort_order: order };
+            if (section === 'jobs') {
+                const dollarsInput = document.getElementById('add-dollars-' + checklistId + '-' + section);
+                if (dollarsInput && dollarsInput.value) item.dollars = parseFloat(dollarsInput.value);
+            }
+            if (section === 'chores') {
+                const coinsInput = document.getElementById('add-coins-' + checklistId + '-' + section);
+                if (coinsInput && coinsInput.value) item.coins = parseInt(coinsInput.value);
+            }
+            await sb.from('checklist_items').insert(item);
             input.value = '';
             loadChecklists();
         }
