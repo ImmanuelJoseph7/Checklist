@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My History</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 10px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        .header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; padding: 12px; background: white;
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header h1 { font-size: 18px; color: #333; }
+        .header .profile { font-size: 14px; color: #666; }
+        .nav { display: flex; gap: 8px; margin-bottom: 16px; }
+        .nav a {
+            padding: 8px 14px; border-radius: 6px; text-decoration: none;
+            background: white; color: #667eea; font-size: 13px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .nav a.active { background: #667eea; color: white; }
+        .month-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px;
+        }
+        .month-nav button {
+            padding: 8px 14px; border: none; border-radius: 6px;
+            background: #667eea; color: white; cursor: pointer; font-size: 14px;
+        }
+        .month-nav .month-label { font-size: 16px; font-weight: bold; color: #333; }
+        .calendar {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+            background: white; padding: 12px; border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .cal-header { text-align: center; font-size: 11px; color: #999; padding: 4px; font-weight: bold; }
+        .cal-day {
+            aspect-ratio: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            border-radius: 6px; font-size: 12px; position: relative;
+            min-height: 44px;
+        }
+        .cal-day.empty { background: transparent; }
+        .cal-day.has-data { background: #f0fdf4; border: 1px solid #bbf7d0; }
+        .cal-day.today { border: 2px solid #667eea; }
+        .cal-day .day-num { font-size: 11px; color: #666; }
+        .cal-day .coins { font-size: 10px; color: #f59e0b; font-weight: bold; }
+        .cal-day .dollars { font-size: 10px; color: #10b981; font-weight: bold; }
+        .totals {
+            margin-top: 16px; padding: 16px; background: white;
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+        }
+        .total-box { text-align: center; }
+        .total-box .label { font-size: 12px; color: #666; }
+        .total-box .value { font-size: 24px; font-weight: bold; }
+        .total-box .value.coins-val { color: #f59e0b; }
+        .total-box .value.dollars-val { color: #10b981; }
+        .loading { text-align: center; padding: 40px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📅 My History</h1>
+            <span class="profile" id="profileName"></span>
+        </div>
+        <div class="nav">
+            <a href="index.html">✅ Checklist</a>
+            <a href="history.html" class="active">📅 History</a>
+            <a href="login.html" onclick="Session.clear()">🚪 Switch Kid</a>
+        </div>
+        <div class="month-nav">
+            <button onclick="prevMonth()">◀</button>
+            <span class="month-label" id="monthLabel"></span>
+            <button onclick="nextMonth()">▶</button>
+        </div>
+        <div class="calendar" id="calendar">
+            <div class="loading">Loading...</div>
+        </div>
+        <div class="totals" id="totals"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script>
+        if (!Session.isLoggedIn()) window.location.href = 'login.html';
+        document.getElementById('profileName').textContent = Session.getProfileName();
+
+        let currentYear = new Date().getFullYear();
+        let currentMonth = new Date().getMonth();
+
+        function prevMonth() {
+            currentMonth--;
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            renderCalendar();
+        }
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            renderCalendar();
+        }
+
+        async function renderCalendar() {
+            const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            document.getElementById('monthLabel').textContent = `${months[currentMonth]} ${currentYear}`;
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
+            const startDate = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-01`;
+            const endDate = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(daysInMonth).padStart(2,'0')}`;
+
+            let data = [];
+            try {
+                data = await DB.getHistory(Session.getProfileId(), startDate, endDate);
+            } catch(e) { /* offline - show empty */ }
+
+            // Aggregate by date
+            const byDate = {};
+            let monthCoins = 0, monthDollars = 0;
+            data.forEach(log => {
+                if (!byDate[log.date]) byDate[log.date] = { coins: 0, dollars: 0 };
+                byDate[log.date].coins += (log.coins_earned || 0);
+                byDate[log.date].dollars += parseFloat(log.dollars_earned || 0);
+                monthCoins += (log.coins_earned || 0);
+                monthDollars += parseFloat(log.dollars_earned || 0);
+            });
+
+            // Render
+            const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            let html = dayNames.map(d => `<div class="cal-header">${d}</div>`).join('');
+
+            // Empty cells before first day
+            for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const entry = byDate[dateStr];
+                const isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === d;
+                let classes = 'cal-day';
+                if (entry) classes += ' has-data';
+                if (isToday) classes += ' today';
+
+                html += `<div class="${classes}">
+                    <span class="day-num">${d}</span>
+                    ${entry && entry.coins ? `<span class="coins">🪙${entry.coins}</span>` : ''}
+                    ${entry && entry.dollars ? `<span class="dollars">$${entry.dollars.toFixed(2)}</span>` : ''}
+                </div>`;
+            }
+
+            document.getElementById('calendar').innerHTML = html;
+            document.getElementById('totals').innerHTML = `
+                <div class="total-box">
+                    <div class="label">Month Coins</div>
+                    <div class="value coins-val">🪙 ${monthCoins}</div>
+                </div>
+                <div class="total-box">
+                    <div class="label">Month Dollars</div>
+                    <div class="value dollars-val">$${monthDollars.toFixed(2)}</div>
+                </div>
+            `;
+        }
+
+        renderCalendar();
+    </script>
+</body>
+</html>
+
+

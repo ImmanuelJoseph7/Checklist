@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kids Checklist - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 { text-align: center; margin-bottom: 24px; color: #333; }
+        .kid-picker {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        .kid-btn {
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px 10px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            font-size: 16px;
+        }
+        .kid-btn:hover { border-color: #667eea; background: #f5f3ff; }
+        .kid-btn.selected { border-color: #667eea; background: #ede9fe; }
+        .kid-btn .emoji { font-size: 40px; display: block; margin-bottom: 8px; }
+        .pin-section { display: none; text-align: center; }
+        .pin-section.visible { display: block; }
+        .pin-label { font-size: 14px; color: #666; margin-bottom: 12px; }
+        .pin-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .pin-dot {
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            background: white;
+            transition: all 0.2s;
+        }
+        .pin-dot.filled { background: #667eea; border-color: #667eea; }
+        .pin-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-width: 240px;
+            margin: 0 auto;
+        }
+        .pin-key {
+            padding: 16px;
+            font-size: 22px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9f9;
+            cursor: pointer;
+            text-align: center;
+            user-select: none;
+        }
+        .pin-key:hover { background: #ede9fe; }
+        .pin-key:active { background: #667eea; color: white; }
+        .error { color: #e53e3e; text-align: center; font-size: 14px; margin-top: 12px; display: none; }
+        .error.visible { display: block; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>👋 Who's checking in?</h1>
+        <div class="kid-picker" id="kidPicker">
+            <div style="text-align:center;color:#666;">Loading...</div>
+        </div>
+        <div class="pin-section" id="pinSection">
+            <div class="pin-label">Enter your PIN</div>
+            <div class="pin-dots" id="pinDots">
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+            </div>
+            <div class="pin-pad">
+                <div class="pin-key" onclick="pressKey('1')">1</div>
+                <div class="pin-key" onclick="pressKey('2')">2</div>
+                <div class="pin-key" onclick="pressKey('3')">3</div>
+                <div class="pin-key" onclick="pressKey('4')">4</div>
+                <div class="pin-key" onclick="pressKey('5')">5</div>
+                <div class="pin-key" onclick="pressKey('6')">6</div>
+                <div class="pin-key" onclick="pressKey('7')">7</div>
+                <div class="pin-key" onclick="pressKey('8')">8</div>
+                <div class="pin-key" onclick="pressKey('9')">9</div>
+                <div class="pin-key" onclick="pressKey('⌫')">⌫</div>
+                <div class="pin-key" onclick="pressKey('0')">0</div>
+                <div class="pin-key" onclick="pressKey('✓')">✓</div>
+            </div>
+            <div class="error" id="error">Wrong PIN. Try again.</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script>
+        let selectedProfile = null;
+        let pin = '';
+
+        // If already logged in, go to checklist
+        if (Session.isLoggedIn()) {
+            window.location.href = 'index.html';
+        }
+
+        async function loadProfiles() {
+            let profiles;
+            try {
+                profiles = await DB.getProfiles();
+            } catch (e) {
+                profiles = DB.getCachedProfiles();
+                if (!profiles) {
+                    document.getElementById('kidPicker').innerHTML = '<div style="text-align:center;color:#e53e3e;grid-column:1/-1;">Connection error: ' + e.message + '</div>';
+                    return;
+                }
+            }
+            if (!profiles || profiles.length === 0) {
+                document.getElementById('kidPicker').innerHTML = '<div style="text-align:center;color:#666;grid-column:1/-1;">No kids set up yet. Ask a parent to add you!</div>';
+                return;
+            }
+            document.getElementById('kidPicker').innerHTML = profiles.map(p => `
+                <div class="kid-btn" onclick="selectKid('${p.id}', '${p.name}', this)">
+                    <span class="emoji">${p.avatar_emoji}</span>
+                    ${p.name}
+                </div>
+            `).join('');
+        }
+
+        function selectKid(id, name, el) {
+            selectedProfile = { id, name };
+            pin = '';
+            updateDots();
+            document.querySelectorAll('.kid-btn').forEach(b => b.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('pinSection').classList.add('visible');
+            document.getElementById('error').classList.remove('visible');
+        }
+
+        function pressKey(key) {
+            if (key === '⌫') {
+                pin = pin.slice(0, -1);
+            } else if (key === '✓') {
+                submitPin();
+                return;
+            } else if (pin.length < 4) {
+                pin += key;
+            }
+            updateDots();
+            if (pin.length === 4) submitPin();
+        }
+
+        function updateDots() {
+            const dots = document.querySelectorAll('.pin-dot');
+            dots.forEach((d, i) => d.classList.toggle('filled', i < pin.length));
+        }
+
+        async function submitPin() {
+            if (!selectedProfile || pin.length !== 4) return;
+            try {
+                const profile = await DB.verifyPin(selectedProfile.id, pin);
+                if (profile) {
+                    Session.setProfile(profile.id, profile.name);
+                    window.location.href = 'index.html';
+                } else {
+                    showError();
+                }
+            } catch (e) {
+                // Offline fallback: check cached profiles
+                const cached = DB.getCachedProfiles();
+                if (cached) {
+                    const match = cached.find(p => p.id === selectedProfile.id && p.pin === pin);
+                    if (match) {
+                        Session.setProfile(match.id, match.name);
+                        window.location.href = 'index.html';
+                        return;
+                    }
+                }
+                showError();
+            }
+        }
+
+        function showError() {
+            document.getElementById('error').classList.add('visible');
+            pin = '';
+            updateDots();
+            setTimeout(() => document.getElementById('error').classList.remove('visible'), 2000);
+        }
+
+        loadProfiles();
+    </script>
+</body>
+</html>
+
+

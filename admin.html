@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Kids Checklist</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 10px; }
+        .container { max-width: 700px; margin: 0 auto; }
+        h1 { text-align: center; color: #333; margin-bottom: 16px; }
+        .login-box { max-width: 300px; margin: 60px auto; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .login-box input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; }
+        .login-box button { width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .tabs { display: flex; gap: 4px; margin-bottom: 16px; flex-wrap: wrap; }
+        .tab { padding: 8px 14px; border-radius: 6px 6px 0 0; border: 1px solid #ddd; border-bottom: none; background: #f9f9f9; cursor: pointer; font-size: 13px; }
+        .tab.active { background: white; font-weight: bold; }
+        .panel { background: white; border-radius: 0 8px 8px 8px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: none; }
+        .panel.active { display: block; }
+        .card { border: 1px solid #e0e0e0; border-radius: 6px; padding: 12px; margin-bottom: 10px; }
+        .card h3 { font-size: 14px; color: #333; margin-bottom: 8px; }
+        .item-list { list-style: none; }
+        .item-list li { padding: 6px 0; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        .item-list li:last-child { border-bottom: none; }
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .btn-sm { padding: 4px 8px; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-danger { background: #e53e3e; color: white; }
+        .btn-success { background: #38a169; color: white; }
+        .add-form { display: flex; gap: 8px; margin-top: 8px; }
+        .add-form input { flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+        .kids-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .kid-card { text-align: center; padding: 16px; }
+        .kid-card .emoji { font-size: 32px; }
+        .config-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .config-row label { font-size: 13px; min-width: 120px; }
+        .config-row input { padding: 6px; border: 1px solid #ddd; border-radius: 4px; width: 200px; }
+        .error { color: #e53e3e; font-size: 13px; margin-top: 8px; }
+        .success { color: #38a169; font-size: 13px; margin-top: 8px; }
+        .logout { float: right; font-size: 12px; color: #667eea; cursor: pointer; text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Login -->
+        <div id="loginView">
+            <div class="login-box">
+                <h2 style="margin-bottom:16px;text-align:center;">🔒 Parent Login</h2>
+                <input type="text" id="adminUser" placeholder="Username">
+                <input type="password" id="adminPass" placeholder="Password">
+                <button onclick="adminLogin()">Login</button>
+                <div class="error" id="loginError" style="display:none;"></div>
+                <div style="margin-top:12px;text-align:center;">
+                    <a href="#" onclick="showRegister()" style="font-size:13px;color:#667eea;">Request access</a>
+                </div>
+            </div>
+            <div class="login-box" id="registerBox" style="display:none;margin-top:16px;">
+                <h2 style="margin-bottom:16px;text-align:center;">📝 Request Access</h2>
+                <input type="text" id="regUser" placeholder="Choose a username">
+                <input type="password" id="regPass" placeholder="Choose a password">
+                <button onclick="registerAdmin()">Submit Request</button>
+                <div class="error" id="regError" style="display:none;"></div>
+                <div class="success" id="regSuccess" style="display:none;"></div>
+            </div>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="adminView" style="display:none;">
+            <h1>⚙️ Admin Panel <span class="logout" onclick="adminLogout()">Logout</span></h1>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('checklists')">📋 Checklists</div>
+                <div class="tab" onclick="switchTab('kids')">👧 Kids</div>
+                <div class="tab" onclick="switchTab('config')">⚙️ Config</div>
+                <div class="tab" id="adminsTab" style="display:none;" onclick="switchTab('admins')">👤 Admins</div>
+            </div>
+
+            <!-- Checklists Tab -->
+            <div class="panel active" id="panel-checklists">
+                <div id="checklistsList"><div style="color:#666;">Loading...</div></div>
+            </div>
+
+            <!-- Kids Tab -->
+            <div class="panel" id="panel-kids">
+                <div class="kids-grid" id="kidsList"></div>
+                <div class="add-form" style="margin-top:16px;">
+                    <input id="newKidName" placeholder="Name">
+                    <input id="newKidPin" placeholder="PIN" maxlength="4" style="width:80px;">
+                    <input id="newKidEmoji" placeholder="Emoji" style="width:60px;" value="😊">
+                    <button class="btn btn-primary" onclick="addKid()">Add</button>
+                </div>
+            </div>
+
+            <!-- Config Tab -->
+            <div class="panel" id="panel-config">
+                <h3 style="margin-bottom:12px;">Term Dates (2026)</h3>
+                <div id="termDates"></div>
+                <button class="btn btn-primary" onclick="saveConfig()" style="margin-top:12px;">Save Config</button>
+                <div class="success" id="configMsg" style="display:none;"></div>
+            </div>
+
+            <!-- Admins Tab (super only) -->
+            <div class="panel" id="panel-admins">
+                <h3 style="margin-bottom:12px;">Manage Admins</h3>
+                <div id="adminsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script>
+        let adminLoggedIn = localStorage.getItem('admin_logged_in');
+        let adminRole = localStorage.getItem('admin_role');
+        if (adminLoggedIn) showAdmin();
+
+        function showRegister() {
+            document.getElementById('registerBox').style.display = 'block';
+        }
+
+        async function registerAdmin() {
+            const user = document.getElementById('regUser').value.trim();
+            const pass = document.getElementById('regPass').value.trim();
+            if (!user || !pass) { document.getElementById('regError').textContent = 'Fill in both fields'; document.getElementById('regError').style.display = 'block'; return; }
+            const { data, error } = await sb.from('admins').insert({ username: user, password: pass, role: 'pending' }).select();
+            if (error) {
+                document.getElementById('regError').textContent = error.message.includes('duplicate') ? 'Username taken' : error.message;
+                document.getElementById('regError').style.display = 'block';
+            } else {
+                document.getElementById('regSuccess').textContent = 'Request submitted! Ask the super admin to approve you.';
+                document.getElementById('regSuccess').style.display = 'block';
+                document.getElementById('regError').style.display = 'none';
+            }
+        }
+
+        async function adminLogin() {
+            const user = document.getElementById('adminUser').value.trim();
+            const pass = document.getElementById('adminPass').value.trim();
+            const { data, error } = await sb.from('admins').select('*').eq('username', user).eq('password', pass).maybeSingle();
+            if (data) {
+                if (data.role === 'pending') {
+                    document.getElementById('loginError').textContent = 'Your access is pending approval.';
+                    document.getElementById('loginError').style.display = 'block';
+                    return;
+                }
+                localStorage.setItem('admin_logged_in', 'true');
+                localStorage.setItem('admin_role', data.role);
+                adminRole = data.role;
+                showAdmin();
+            } else {
+                document.getElementById('loginError').textContent = 'Invalid credentials';
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        function adminLogout() {
+            localStorage.removeItem('admin_logged_in');
+            localStorage.removeItem('admin_role');
+            location.reload();
+        }
+
+        function showAdmin() {
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('adminView').style.display = 'block';
+            if (adminRole === 'super') {
+                document.getElementById('adminsTab').style.display = '';
+                loadAdmins();
+            }
+            loadChecklists();
+            loadKids();
+            loadConfig();
+        }
+
+        function switchTab(name) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('panel-' + name).classList.add('active');
+        }
+
+        // === ADMINS (super only) ===
+        async function loadAdmins() {
+            const { data } = await sb.from('admins').select('*').order('created_at');
+            document.getElementById('adminsList').innerHTML = data.map(a => `
+                <div class="card" style="display:flex;justify-content:space-between;align-items:center;">
+                    <div>
+                        <strong>${a.username}</strong>
+                        <span style="font-size:12px;color:${a.role==='pending'?'#f59e0b':a.role==='super'?'#667eea':'#38a169'};margin-left:8px;">${a.role}</span>
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        ${a.role === 'pending' ? `<button class="btn btn-sm btn-success" onclick="approveAdmin('${a.id}')">Approve</button>` : ''}
+                        ${a.role !== 'super' ? `<button class="btn btn-sm btn-danger" onclick="removeAdmin('${a.id}')">Remove</button>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function approveAdmin(id) {
+            await sb.from('admins').update({ role: 'admin' }).eq('id', id);
+            loadAdmins();
+        }
+
+        async function removeAdmin(id) {
+            if (!confirm('Remove this admin?')) return;
+            await sb.from('admins').delete().eq('id', id);
+            loadAdmins();
+        }
+
+        // === CHECKLISTS ===
+        async function loadChecklists() {
+            const data = await DB.getAllChecklists();
+            document.getElementById('checklistsList').innerHTML = data.map(cl => {
+                const items = cl.checklist_items.sort((a,b) => a.sort_order - b.sort_order);
+                const sections = {};
+                items.forEach(item => {
+                    if (!sections[item.section]) sections[item.section] = [];
+                    sections[item.section].push(item);
+                });
+                return `<div class="card">
+                    <h3>${cl.title} <small style="color:#999;">(${cl.slug})</small></h3>
+                    ${Object.entries(sections).map(([sec, sitems]) => `
+                        <div style="margin-top:8px;"><strong style="font-size:12px;color:#667eea;">${sec}</strong>
+                        <ul class="item-list">
+                            ${sitems.map(item => `<li>
+                                <span>${item.text}${item.dollars ? ' — $' + item.dollars : ''}</span>
+                                <button class="btn btn-sm btn-danger" onclick="deleteItem('${item.id}')">✕</button>
+                            </li>`).join('')}
+                        </ul>
+                        <div class="add-form">
+                            <input id="add-${cl.id}-${sec}" placeholder="New item text...">
+                            ${sec === 'jobs' ? `<input id="add-dollars-${cl.id}-${sec}" placeholder="$" style="width:60px;">` : ''}
+                            ${sec === 'chores' ? `<input id="add-coins-${cl.id}-${sec}" placeholder="Coins" style="width:60px;">` : ''}
+                            <button class="btn btn-sm btn-success" onclick="addItem('${cl.id}','${sec}','add-${cl.id}-${sec}',${sitems.length + 1})">+</button>
+                        </div></div>
+                    `).join('')}
+                </div>`;
+            }).join('');
+        }
+
+        async function addItem(checklistId, section, inputId, order) {
+            const input = document.getElementById(inputId);
+            const text = input.value.trim();
+            if (!text) return;
+            const item = { checklist_id: checklistId, text, section, sort_order: order };
+            if (section === 'jobs') {
+                const dollarsInput = document.getElementById('add-dollars-' + checklistId + '-' + section);
+                if (dollarsInput && dollarsInput.value) item.dollars = parseFloat(dollarsInput.value);
+            }
+            if (section === 'chores') {
+                const coinsInput = document.getElementById('add-coins-' + checklistId + '-' + section);
+                if (coinsInput && coinsInput.value) item.coins = parseInt(coinsInput.value);
+            }
+            await sb.from('checklist_items').insert(item);
+            input.value = '';
+            loadChecklists();
+        }
+
+        async function deleteItem(id) {
+            if (!confirm('Delete this item?')) return;
+            await sb.from('checklist_items').delete().eq('id', id);
+            loadChecklists();
+        }
+
+        // === KIDS ===
+        async function loadKids() {
+            const profiles = await DB.getProfiles();
+            document.getElementById('kidsList').innerHTML = profiles.map(p => `
+                <div class="card kid-card">
+                    <div class="emoji">${p.avatar_emoji}</div>
+                    <div><strong>${p.name}</strong></div>
+                    <div style="font-size:12px;color:#999;">PIN: ${p.pin}</div>
+                    <button class="btn btn-sm btn-danger" style="margin-top:8px;" onclick="deleteKid('${p.id}')">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        async function addKid() {
+            const name = document.getElementById('newKidName').value.trim();
+            const pin = document.getElementById('newKidPin').value.trim();
+            const emoji = document.getElementById('newKidEmoji').value.trim() || '😊';
+            if (!name || !pin || pin.length !== 4) { alert('Name and 4-digit PIN required'); return; }
+            await sb.from('profiles').insert({ name, pin, avatar_emoji: emoji });
+            document.getElementById('newKidName').value = '';
+            document.getElementById('newKidPin').value = '';
+            loadKids();
+        }
+
+        async function deleteKid(id) {
+            if (!confirm('Remove this kid?')) return;
+            await sb.from('profiles').delete().eq('id', id);
+            loadKids();
+        }
+
+        // === CONFIG ===
+        async function loadConfig() {
+            const config = await DB.getConfig();
+            const terms = config.term_dates || [];
+            document.getElementById('termDates').innerHTML = terms.map((t, i) => `
+                <div class="config-row">
+                    <label>Term ${i+1}:</label>
+                    <input id="term-start-${i}" value="${t.start}" placeholder="YYYY-MM-DD" style="width:130px;">
+                    <span>to</span>
+                    <input id="term-end-${i}" value="${t.end}" placeholder="YYYY-MM-DD" style="width:130px;">
+                </div>
+            `).join('');
+        }
+
+        async function saveConfig() {
+            const terms = [];
+            for (let i = 0; i < 4; i++) {
+                const start = document.getElementById(`term-start-${i}`);
+                const end = document.getElementById(`term-end-${i}`);
+                if (start && end && start.value && end.value) {
+                    terms.push({ start: start.value, end: end.value });
+                }
+            }
+            await sb.from('config').upsert({ key: 'term_dates', value: terms });
+            document.getElementById('configMsg').textContent = 'Saved!';
+            document.getElementById('configMsg').style.display = 'block';
+            setTimeout(() => document.getElementById('configMsg').style.display = 'none', 2000);
+        }
+    </script>
+</body>
+</html>
+
+
+
