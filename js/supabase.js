@@ -40,8 +40,7 @@ const DB = {
   },
 
   async verifyPin(profileId, pin) {
-    const { data, error } = await supabase
-      .from('profiles').select('id, name').eq('id', profileId).eq('pin', pin).single();
+    const { data, error } = await sb.from('profiles').select('id, name').eq('id', profileId).eq('pin', pin).single();
     if (error) return null;
     return data;
   },
@@ -56,24 +55,21 @@ const DB = {
   },
 
   async getChecklist(slug) {
-    const { data, error } = await supabase
-      .from('checklists').select('*, checklist_items(*), rewards(*)').eq('slug', slug).single();
+    const { data, error } = await sb.from('checklists').select('*, checklist_items(*), rewards(*)').eq('slug', slug).single();
     if (error) throw error;
     localStorage.setItem(`cache_checklist_${slug}`, JSON.stringify(data));
     return data;
   },
 
   async getAllChecklists() {
-    const { data, error } = await supabase
-      .from('checklists').select('*, checklist_items(*), rewards(*)').order('sort_order');
+    const { data, error } = await sb.from('checklists').select('*, checklist_items(*), rewards(*)').order('sort_order');
     if (error) throw error;
     localStorage.setItem('cache_all_checklists', JSON.stringify(data));
     return data;
   },
 
   async getDailyLog(profileId, date, checklistSlug, section) {
-    const { data, error } = await supabase
-      .from('daily_log').select('*')
+    const { data, error } = await sb.from('daily_log').select('*')
       .eq('profile_id', profileId).eq('date', date)
       .eq('checklist_slug', checklistSlug).eq('section', section)
       .maybeSingle();
@@ -82,16 +78,14 @@ const DB = {
   },
 
   async upsertDailyLog(log) {
-    const { data, error } = await supabase
-      .from('daily_log').upsert(log, { onConflict: 'profile_id,date,checklist_slug,section' })
+    const { data, error } = await sb.from('daily_log').upsert(log, { onConflict: 'profile_id,date,checklist_slug,section' })
       .select().single();
     if (error) throw error;
     return data;
   },
 
   async getHistory(profileId, startDate, endDate) {
-    const { data, error } = await supabase
-      .from('daily_log').select('*')
+    const { data, error } = await sb.from('daily_log').select('*')
       .eq('profile_id', profileId)
       .gte('date', startDate).lte('date', endDate)
       .order('date');
@@ -113,4 +107,5 @@ const DB = {
     return cached ? JSON.parse(cached) : null;
   }
 };
+
 
