@@ -106,7 +106,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="js/supabase.js"></script>
     <script>
         let adminLoggedIn = localStorage.getItem('admin_logged_in');
@@ -121,7 +121,7 @@
             const user = document.getElementById('regUser').value.trim();
             const pass = document.getElementById('regPass').value.trim();
             if (!user || !pass) { document.getElementById('regError').textContent = 'Fill in both fields'; document.getElementById('regError').style.display = 'block'; return; }
-            const { data, error } = await supabase.from('admins').insert({ username: user, password: pass, role: 'pending' }).select();
+            const { data, error } = await sb.from('admins').insert({ username: user, password: pass, role: 'pending' }).select();
             if (error) {
                 document.getElementById('regError').textContent = error.message.includes('duplicate') ? 'Username taken' : error.message;
                 document.getElementById('regError').style.display = 'block';
@@ -135,7 +135,7 @@
         async function adminLogin() {
             const user = document.getElementById('adminUser').value.trim();
             const pass = document.getElementById('adminPass').value.trim();
-            const { data, error } = await supabase.from('admins').select('*').eq('username', user).eq('password', pass).maybeSingle();
+            const { data, error } = await sb.from('admins').select('*').eq('username', user).eq('password', pass).maybeSingle();
             if (data) {
                 if (data.role === 'pending') {
                     document.getElementById('loginError').textContent = 'Your access is pending approval.';
@@ -179,7 +179,7 @@
 
         // === ADMINS (super only) ===
         async function loadAdmins() {
-            const { data } = await supabase.from('admins').select('*').order('created_at');
+            const { data } = await sb.from('admins').select('*').order('created_at');
             document.getElementById('adminsList').innerHTML = data.map(a => `
                 <div class="card" style="display:flex;justify-content:space-between;align-items:center;">
                     <div>
@@ -195,13 +195,13 @@
         }
 
         async function approveAdmin(id) {
-            await supabase.from('admins').update({ role: 'admin' }).eq('id', id);
+            await sb.from('admins').update({ role: 'admin' }).eq('id', id);
             loadAdmins();
         }
 
         async function removeAdmin(id) {
             if (!confirm('Remove this admin?')) return;
-            await supabase.from('admins').delete().eq('id', id);
+            await sb.from('admins').delete().eq('id', id);
             loadAdmins();
         }
 
@@ -238,14 +238,14 @@
             const input = document.getElementById(inputId);
             const text = input.value.trim();
             if (!text) return;
-            await supabase.from('checklist_items').insert({ checklist_id: checklistId, text, section, sort_order: order });
+            await sb.from('checklist_items').insert({ checklist_id: checklistId, text, section, sort_order: order });
             input.value = '';
             loadChecklists();
         }
 
         async function deleteItem(id) {
             if (!confirm('Delete this item?')) return;
-            await supabase.from('checklist_items').delete().eq('id', id);
+            await sb.from('checklist_items').delete().eq('id', id);
             loadChecklists();
         }
 
@@ -267,7 +267,7 @@
             const pin = document.getElementById('newKidPin').value.trim();
             const emoji = document.getElementById('newKidEmoji').value.trim() || '😊';
             if (!name || !pin || pin.length !== 4) { alert('Name and 4-digit PIN required'); return; }
-            await supabase.from('profiles').insert({ name, pin, avatar_emoji: emoji });
+            await sb.from('profiles').insert({ name, pin, avatar_emoji: emoji });
             document.getElementById('newKidName').value = '';
             document.getElementById('newKidPin').value = '';
             loadKids();
@@ -275,7 +275,7 @@
 
         async function deleteKid(id) {
             if (!confirm('Remove this kid?')) return;
-            await supabase.from('profiles').delete().eq('id', id);
+            await sb.from('profiles').delete().eq('id', id);
             loadKids();
         }
 
@@ -302,7 +302,7 @@
                     terms.push({ start: start.value, end: end.value });
                 }
             }
-            await supabase.from('config').upsert({ key: 'term_dates', value: terms });
+            await sb.from('config').upsert({ key: 'term_dates', value: terms });
             document.getElementById('configMsg').textContent = 'Saved!';
             document.getElementById('configMsg').style.display = 'block';
             setTimeout(() => document.getElementById('configMsg').style.display = 'none', 2000);
@@ -310,3 +310,6 @@
     </script>
 </body>
 </html>
+
+
+

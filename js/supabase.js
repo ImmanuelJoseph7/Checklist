@@ -2,7 +2,9 @@
 const SUPABASE_URL = 'https://pcqxqkqigtdtgfstwlbl.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBjcXhxa3FpZ3RkdGdmc3R3bGJsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5NDg4MTYsImV4cCI6MjA5NzUyNDgxNn0.w499x0bOIs_JkWAuTmY_Qr-KxrG3nPr2uV37UO0w8M0';
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// The UMD bundle creates a global 'supabase' var with createClient on it
+const _supabaseLib = window.supabase;
+const sb = _supabaseLib ? _supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 
 // Session management
 const Session = {
@@ -31,7 +33,7 @@ const Session = {
 // Data helpers with offline cache
 const DB = {
   async getProfiles() {
-    const { data, error } = await supabase.from('profiles').select('*').order('name');
+    const { data, error } = await sb.from('profiles').select('*').order('name');
     if (error) throw error;
     localStorage.setItem('cache_profiles', JSON.stringify(data));
     return data;
@@ -45,7 +47,7 @@ const DB = {
   },
 
   async getConfig() {
-    const { data, error } = await supabase.from('config').select('*');
+    const { data, error } = await sb.from('config').select('*');
     if (error) throw error;
     const config = {};
     data.forEach(row => { config[row.key] = row.value; });
@@ -111,3 +113,4 @@ const DB = {
     return cached ? JSON.parse(cached) : null;
   }
 };
+

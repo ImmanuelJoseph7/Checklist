@@ -115,7 +115,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="js/supabase.js"></script>
     <script>
         let selectedProfile = null;
@@ -132,6 +132,10 @@
                 profiles = await DB.getProfiles();
             } catch (e) {
                 profiles = DB.getCachedProfiles();
+                if (!profiles) {
+                    document.getElementById('kidPicker').innerHTML = '<div style="text-align:center;color:#e53e3e;grid-column:1/-1;">Connection error: ' + e.message + '</div>';
+                    return;
+                }
             }
             if (!profiles || profiles.length === 0) {
                 document.getElementById('kidPicker').innerHTML = '<div style="text-align:center;color:#666;grid-column:1/-1;">No kids set up yet. Ask a parent to add you!</div>';
@@ -209,3 +213,5 @@
     </script>
 </body>
 </html>
+
+
