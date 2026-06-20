@@ -135,7 +135,7 @@
         async function adminLogin() {
             const user = document.getElementById('adminUser').value.trim();
             const pass = document.getElementById('adminPass').value.trim();
-            const { data, error } = await sb.from('admins').select('*').eq('username', user).eq('password', pass).maybeSingle();
+            const { data, error } = await sb.rpc('admin_login', { p_username: user, p_password: pass });
             if (data) {
                 if (data.role === 'pending') {
                     document.getElementById('loginError').textContent = 'Your access is pending approval.';

@@ -33,14 +33,14 @@ const Session = {
 // Data helpers with offline cache
 const DB = {
   async getProfiles() {
-    const { data, error } = await sb.from('profiles').select('*').order('name');
+    const { data, error } = await sb.from('profiles').select('id, name, avatar_emoji').order('name');
     if (error) throw error;
     localStorage.setItem('cache_profiles', JSON.stringify(data));
     return data;
   },
 
   async verifyPin(profileId, pin) {
-    const { data, error } = await sb.from('profiles').select('id, name').eq('id', profileId).eq('pin', pin).single();
+    const { data, error } = await sb.rpc('verify_pin', { p_id: profileId, p_pin: pin });
     if (error) return null;
     return data;
   },
