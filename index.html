@@ -276,9 +276,9 @@
             eveningBonus: ['😊 I used manners today!', '🤗 I was polite by responding to others with a happy smile!', '👂 I listened to mummy and daddy immediately!'],
             jobs: [
                 { text: '🪴 Watered plants with sibling', dollars: 0.50, group: 'watering' },
-                { text: '🪴 Watered plants by myself', dollars: 1.00, group: 'watering' },
-                { text: '🍽️ Empty the dishwasher', dollars: 0.50, group: 'independent' }
-            ]
+                { text: '🪴 Watered plants by myself', dollars: 1.00, group: 'watering' }
+            ],
+            chores: ['🍽️ Empty the dishwasher']
         };
 
         // ============================================================================
@@ -931,6 +931,20 @@
                 `).join('');
             }
 
+            // Chores section (3 coins each)
+            if (shouldShowJobs()) {
+                const choresChecked = Storage.get(`${type}ChoresChecked`, []);
+                const choresItems = DEFAULT_ITEMS.chores || [];
+                if (choresItems.length > 0) {
+                    html += '<div class="section-title">🧹 Chores (3 coins each)</div>';
+                    html += choresItems.map((item, i) => `
+                        <div class="item ${choresChecked.includes(i) ? 'checked' : ''}">
+                            <input type="checkbox" ${choresChecked.includes(i) ? 'checked' : ''} onchange="toggleChore(${i})">
+                            <span>${item}</span>
+                        </div>
+                    `).join('');
+                }
+            }
 
             if (shouldShowJobs()) {
                 const jobsChecked = getJobsChecked();
@@ -1038,6 +1052,32 @@
             }
             
             saveBonusChecked(checked);
+            render();
+        }
+
+        function toggleChore(index) {
+            const checked = Storage.get(`${type}ChoresChecked`, []);
+            const rewards = Storage.get(`${type}ChoresRewards`, []);
+            const pos = checked.indexOf(index);
+
+            if (pos > -1) {
+                checked.splice(pos, 1);
+                if (rewards.includes(index)) {
+                    rewards.splice(rewards.indexOf(index), 1);
+                    Storage.set(`${type}ChoresRewards`, rewards);
+                    removeCoins(3);
+                }
+            } else {
+                checked.push(index);
+                if (!rewards.includes(index)) {
+                    rewards.push(index);
+                    Storage.set(`${type}ChoresRewards`, rewards);
+                    const total = addCoins(3);
+                    showModal('🧹 Great work!', `You earned 3 coins! Total: ${total}`, 2000);
+                }
+            }
+
+            Storage.set(`${type}ChoresChecked`, checked);
             render();
         }
 
