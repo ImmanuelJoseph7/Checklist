@@ -52,13 +52,20 @@
         .totals {
             margin-top: 16px; padding: 16px; background: white;
             border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
         }
-        .total-box { text-align: center; }
-        .total-box .label { font-size: 12px; color: #666; }
-        .total-box .value { font-size: 24px; font-weight: bold; }
-        .total-box .value.coins-val { color: #f59e0b; }
-        .total-box .value.dollars-val { color: #10b981; }
+        .coin-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding-bottom: 10px; border-bottom: 1px solid #eee; margin-bottom: 10px;
+        }
+        .coin-item { text-align: center; flex: 1; }
+        .coin-item .label { font-size: 11px; color: #666; }
+        .coin-item .value { font-size: 18px; font-weight: bold; }
+        .coin-total { text-align: center; flex: 1; }
+        .coin-total .label { font-size: 11px; color: #666; }
+        .coin-total .value { font-size: 24px; font-weight: bold; color: #f59e0b; }
+        .dollars-row { text-align: center; }
+        .dollars-row .label { font-size: 11px; color: #666; }
+        .dollars-row .value { font-size: 20px; font-weight: bold; color: #10b981; }
         .loading { text-align: center; padding: 40px; color: #666; }
     </style>
 </head>
@@ -157,29 +164,27 @@
 
             document.getElementById('calendar').innerHTML = html;
             document.getElementById('totals').innerHTML = `
-                <div class="total-box">
-                    <div class="label">Total Coins</div>
-                    <div class="value coins-val">🪙 ${monthCoins}</div>
+                <div class="coin-row">
+                    <div class="coin-item">
+                        <div class="label">⭐ Regular</div>
+                        <div class="value" style="color:#4CAF50;">${monthRegular}</div>
+                    </div>
+                    <div class="coin-item">
+                        <div class="label">⭐ Bonus</div>
+                        <div class="value" style="color:#f59e0b;">${monthBonus}</div>
+                    </div>
+                    <div class="coin-item">
+                        <div class="label">🧹 Chores</div>
+                        <div class="value" style="color:#8b5cf6;">${monthChores}</div>
+                    </div>
+                    <div class="coin-total">
+                        <div class="label">🪙 Total</div>
+                        <div class="value">${monthCoins}</div>
+                    </div>
                 </div>
-                <div class="total-box">
-                    <div class="label">Dollars</div>
-                    <div class="value dollars-val">$${monthDollars.toFixed(2)}</div>
-                </div>
-                <div class="total-box">
-                    <div class="label">⭐ Regular</div>
-                    <div class="value" style="color:#4CAF50;font-size:20px;">${monthRegular}</div>
-                </div>
-                <div class="total-box">
-                    <div class="label">⭐ Bonus</div>
-                    <div class="value" style="color:#f59e0b;font-size:20px;">${monthBonus}</div>
-                </div>
-                <div class="total-box">
-                    <div class="label">🧹 Chores</div>
-                    <div class="value" style="color:#8b5cf6;font-size:20px;">${monthChores}</div>
-                </div>
-                <div class="total-box">
+                <div class="dollars-row">
                     <div class="label">💵 Jobs</div>
-                    <div class="value" style="color:#10b981;font-size:20px;">$${monthDollars.toFixed(2)}</div>
+                    <div class="value">$${monthDollars.toFixed(2)}</div>
                 </div>
             `;
         }
