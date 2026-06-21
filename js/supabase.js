@@ -78,7 +78,7 @@ const DB = {
   },
 
   async upsertDailyLog(log) {
-    const { data, error } = await sb.from('daily_log').upsert(log, { onConflict: 'profile_id,date,checklist_slug,section' })
+    const { data, error } = await sb.from('daily_log').upsert(log, { onConflict: 'profile_id,date,checklist_slug' })
       .select().single();
     if (error) throw error;
     return data;
