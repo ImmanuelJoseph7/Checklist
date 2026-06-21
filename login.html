@@ -126,6 +126,13 @@
             window.location.href = 'index.html';
         }
 
+        function clearCoinData() {
+            localStorage.removeItem('totalCoins');
+            localStorage.removeItem('dailyCoins');
+            localStorage.removeItem('totalDollars');
+            localStorage.removeItem('dailyDollars');
+        }
+
         async function loadProfiles() {
             let profiles;
             try {
@@ -183,6 +190,7 @@
                 const profile = await DB.verifyPin(selectedProfile.id, pin);
                 if (profile) {
                     Session.setProfile(profile.id, profile.name);
+                    clearCoinData();
                     window.location.href = 'index.html';
                 } else {
                     showError();
@@ -194,6 +202,7 @@
                     const match = cached.find(p => p.id === selectedProfile.id && p.pin === pin);
                     if (match) {
                         Session.setProfile(match.id, match.name);
+                        clearCoinData();
                         window.location.href = 'index.html';
                         return;
                     }
