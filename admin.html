@@ -179,8 +179,9 @@
 
         // === ADMINS (super only) ===
         async function loadAdmins() {
-            const { data } = await sb.from('admins').select('*').order('created_at');
-            document.getElementById('adminsList').innerHTML = data.map(a => `
+            const { data } = await sb.rpc('list_admins');
+            const admins = data || [];
+            document.getElementById('adminsList').innerHTML = admins.map(a => `
                 <div class="card" style="display:flex;justify-content:space-between;align-items:center;">
                     <div>
                         <strong>${a.username}</strong>
@@ -195,13 +196,13 @@
         }
 
         async function approveAdmin(id) {
-            await sb.from('admins').update({ role: 'admin' }).eq('id', id);
+            await sb.rpc('approve_admin', { admin_id: id });
             loadAdmins();
         }
 
         async function removeAdmin(id) {
             if (!confirm('Remove this admin?')) return;
-            await sb.from('admins').delete().eq('id', id);
+            await sb.rpc('remove_admin', { admin_id: id });
             loadAdmins();
         }
 
