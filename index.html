@@ -283,20 +283,32 @@
             chores: ['🍽️ Empty the dishwasher']
         };
 
-        // Load chores from Supabase cache if available
+        // Load all checklist items from Supabase cache if available
         (function() {
             const cached = localStorage.getItem('cache_all_checklists');
             if (!cached) return;
             try {
                 const checklists = JSON.parse(cached);
-                // Find chores for any checklist that has them (they're the same across all)
-                for (const cl of checklists) {
-                    const chores = (cl.checklist_items || [])
-                        .filter(i => i.section === 'chores')
-                        .sort((a,b) => a.sort_order - b.sort_order)
-                        .map(i => i.text);
-                    if (chores.length > 0) { DEFAULT_ITEMS.chores = chores; break; }
-                }
+                checklists.forEach(cl => {
+                    const items = (cl.checklist_items || []).sort((a,b) => a.sort_order - b.sort_order);
+                    const main = items.filter(i => i.section === 'main').map(i => i.text);
+                    const dinner = items.filter(i => i.section === 'dinner').map(i => i.text);
+                    const bonus = items.filter(i => i.section === 'bonus').map(i => i.text);
+                    const afternoon = items.filter(i => i.section === 'afternoon').map(i => i.text);
+                    const jobs = items.filter(i => i.section === 'jobs').map(i => ({ text: i.text, dollars: parseFloat(i.dollars) || 0, group: i.job_group || 'independent' }));
+                    const chores = items.filter(i => i.section === 'chores').map(i => i.text);
+
+                    if (main.length > 0) DEFAULT_ITEMS[cl.slug] = main;
+                    if (dinner.length > 0) DEFAULT_ITEMS[cl.slug + 'Dinner'] = dinner;
+                    if (bonus.length > 0) {
+                        if (cl.slug === 'morning') DEFAULT_ITEMS.morningBonus = bonus;
+                        else if (cl.slug === 'evening') DEFAULT_ITEMS.eveningBonus = bonus;
+                    }
+                    if (afternoon.length > 0 && cl.slug === 'holiday') DEFAULT_ITEMS.holidayAfternoon = afternoon;
+                    if (cl.slug === 'holiday' && main.length > 0) DEFAULT_ITEMS.holidayMorning = main;
+                    if (jobs.length > 0) DEFAULT_ITEMS.jobs = jobs;
+                    if (chores.length > 0) DEFAULT_ITEMS.chores = chores;
+                });
             } catch(e) {}
         })();
 
