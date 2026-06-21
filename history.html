@@ -52,7 +52,7 @@
         .totals {
             margin-top: 16px; padding: 16px; background: white;
             border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
         }
         .total-box { text-align: center; }
         .total-box .label { font-size: 12px; color: #666; }
@@ -121,14 +121,17 @@
 
             // Aggregate by date
             const byDate = {};
-            let monthCoins = 0, monthDollars = 0;
+            let monthCoins = 0, monthDollars = 0, monthBonus = 0, monthChores = 0, monthRegular = 0;
             data.forEach(log => {
                 if (!byDate[log.date]) byDate[log.date] = { coins: 0, dollars: 0 };
                 byDate[log.date].coins += (log.coins_earned || 0);
                 byDate[log.date].dollars += parseFloat(log.dollars_earned || 0);
                 monthCoins += (log.coins_earned || 0);
                 monthDollars += parseFloat(log.dollars_earned || 0);
+                monthBonus += (log.bonus_coins || 0);
+                monthChores += (log.chore_coins || 0);
             });
+            monthRegular = monthCoins - monthBonus - monthChores;
 
             // Render
             const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -155,12 +158,28 @@
             document.getElementById('calendar').innerHTML = html;
             document.getElementById('totals').innerHTML = `
                 <div class="total-box">
-                    <div class="label">Month Coins</div>
+                    <div class="label">Total Coins</div>
                     <div class="value coins-val">🪙 ${monthCoins}</div>
                 </div>
                 <div class="total-box">
-                    <div class="label">Month Dollars</div>
+                    <div class="label">Dollars</div>
                     <div class="value dollars-val">$${monthDollars.toFixed(2)}</div>
+                </div>
+                <div class="total-box">
+                    <div class="label">⭐ Regular</div>
+                    <div class="value" style="color:#4CAF50;font-size:20px;">${monthRegular}</div>
+                </div>
+                <div class="total-box">
+                    <div class="label">⭐ Bonus</div>
+                    <div class="value" style="color:#f59e0b;font-size:20px;">${monthBonus}</div>
+                </div>
+                <div class="total-box">
+                    <div class="label">🧹 Chores</div>
+                    <div class="value" style="color:#8b5cf6;font-size:20px;">${monthChores}</div>
+                </div>
+                <div class="total-box">
+                    <div class="label">💵 Jobs</div>
+                    <div class="value" style="color:#10b981;font-size:20px;">$${monthDollars.toFixed(2)}</div>
                 </div>
             `;
         }
