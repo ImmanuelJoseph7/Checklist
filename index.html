@@ -1218,15 +1218,33 @@
             const dailyDollars = Storage.get('dailyDollars', 0);
             if (dailyCoins === 0 && dailyDollars === 0) return; // nothing to save
 
-            const yd = new Date(now.getTime() - 86400000);
-            const yesterday = `${yd.getFullYear()}-${String(yd.getMonth()+1).padStart(2,'0')}-${String(yd.getDate()).padStart(2,'0')}`;
-            const checked = Storage.get(`${type}Checked`, []);
-            const isCompleted = Storage.get(`${type}Completed`);
+            // Determine the previous period's date and slug
+            // If resetting at noon (morning→evening), previous period is this morning (same day)
+            // If resetting at midnight, previous period is yesterday
+            const resetHour = isSaturday ? 0 : (isMorning ? 0 : 12);
+            let prevDate, prevSlug;
+            if (resetHour === 12) {
+                // Noon reset: saving this morning's data (same day)
+                const d = now;
+                prevDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                prevSlug = isSunday ? 'sundayMorning' : (isHoliday ? 'holiday' : 'morning');
+            } else {
+                // Midnight reset: saving yesterday's evening/saturday data
+                const yd = new Date(now.getTime() - 86400000);
+                prevDate = `${yd.getFullYear()}-${String(yd.getMonth()+1).padStart(2,'0')}-${String(yd.getDate()).padStart(2,'0')}`;
+                const ydDay = yd.getDay();
+                if (ydDay === 6) prevSlug = 'saturday';
+                else if (ydDay === 0) prevSlug = 'sundayEvening';
+                else prevSlug = 'evening';
+            }
+
+            const checked = Storage.get(`${prevSlug}Checked`, []);
+            const isCompleted = Storage.get(`${prevSlug}Completed`);
 
             DB.upsertDailyLog({
                 profile_id: profileId,
-                date: yesterday,
-                checklist_slug: type,
+                date: prevDate,
+                checklist_slug: prevSlug,
                 section: 'main',
                 checked_items: checked,
                 coins_earned: dailyCoins,
