@@ -936,7 +936,7 @@
                 const choresChecked = Storage.get(`${type}ChoresChecked`, []);
                 const choresItems = DEFAULT_ITEMS.chores || [];
                 if (choresItems.length > 0) {
-                    html += '<div class="section-title">🧹 Chores (3 coins each)</div>';
+                    html += '<div class="section-title">🧹 Chores (5 coins each)</div>';
                     html += choresItems.map((item, i) => `
                         <div class="item ${choresChecked.includes(i) ? 'checked' : ''}">
                             <input type="checkbox" ${choresChecked.includes(i) ? 'checked' : ''} onchange="toggleChore(${i})">
@@ -1065,14 +1065,14 @@
                 if (rewards.includes(index)) {
                     rewards.splice(rewards.indexOf(index), 1);
                     Storage.set(`${type}ChoresRewards`, rewards);
-                    removeCoins(3);
+                    removeCoins(5);
                 }
             } else {
                 checked.push(index);
                 if (!rewards.includes(index)) {
                     rewards.push(index);
                     Storage.set(`${type}ChoresRewards`, rewards);
-                    const total = addCoins(3);
+                    const total = addCoins(5);
                     showModal('🧹 Great work!', `You earned 3 coins! Total: ${total}`, 2000);
                 }
             }
@@ -1232,7 +1232,7 @@
             const dailyDollars = Storage.get('dailyDollars', 0);
             const isCompleted = Storage.get(`${type}Completed`);
             const bonusCoins = getBonusRewards().length;
-            const choreCoins = (Storage.get(`${type}ChoresRewards`, []).length) * 3;
+            const choreCoins = (Storage.get(`${type}ChoresRewards`, []).length) * 5;
 
             try {
                 await DB.upsertDailyLog({
@@ -1276,7 +1276,7 @@
 
             const isCompleted = Storage.get(`${prevSlug}Completed`);
             const bonusCoins = getBonusRewards().length;
-            const choreCoins = (Storage.get(`${prevSlug}ChoresRewards`, []).length) * 3;
+            const choreCoins = (Storage.get(`${prevSlug}ChoresRewards`, []).length) * 5;
 
             DB.upsertDailyLog({
                 profile_id: profileId,
@@ -1306,3 +1306,4 @@
     </script>
 </body>
 </html>
+
