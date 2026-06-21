@@ -192,6 +192,8 @@
     <script src="js/supabase.js"></script>
     <script>
         if (!Session.isLoggedIn()) { window.location.href = 'login.html'; }
+        // Background cache of checklist config from Supabase (for chores loading)
+        if (sb) { DB.getAllChecklists().catch(() => {}); }
     </script>
     <div class="container">
         <div style="display:flex;gap:8px;margin-bottom:10px;font-size:13px;">
@@ -280,6 +282,23 @@
             ],
             chores: ['🍽️ Empty the dishwasher']
         };
+
+        // Load chores from Supabase cache if available
+        (function() {
+            const cached = localStorage.getItem('cache_all_checklists');
+            if (!cached) return;
+            try {
+                const checklists = JSON.parse(cached);
+                // Find chores for any checklist that has them (they're the same across all)
+                for (const cl of checklists) {
+                    const chores = (cl.checklist_items || [])
+                        .filter(i => i.section === 'chores')
+                        .sort((a,b) => a.sort_order - b.sort_order)
+                        .map(i => i.text);
+                    if (chores.length > 0) { DEFAULT_ITEMS.chores = chores; break; }
+                }
+            } catch(e) {}
+        })();
 
         // ============================================================================
         // TIME & CONTEXT STATE
