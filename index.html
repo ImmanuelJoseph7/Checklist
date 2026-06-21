@@ -1231,6 +1231,8 @@
             const dailyCoins = Storage.get('dailyCoins', 0);
             const dailyDollars = Storage.get('dailyDollars', 0);
             const isCompleted = Storage.get(`${type}Completed`);
+            const bonusCoins = getBonusRewards().length;
+            const choreCoins = (Storage.get(`${type}ChoresRewards`, []).length) * 3;
 
             try {
                 await DB.upsertDailyLog({
@@ -1238,6 +1240,8 @@
                     date: today,
                     checklist_slug: type,
                     coins_earned: dailyCoins,
+                    bonus_coins: bonusCoins,
+                    chore_coins: choreCoins,
                     dollars_earned: dailyDollars,
                     completed_at: isCompleted ? new Date().toISOString() : null
                 });
@@ -1271,12 +1275,16 @@
             }
 
             const isCompleted = Storage.get(`${prevSlug}Completed`);
+            const bonusCoins = getBonusRewards().length;
+            const choreCoins = (Storage.get(`${prevSlug}ChoresRewards`, []).length) * 3;
 
             DB.upsertDailyLog({
                 profile_id: profileId,
                 date: prevDate,
                 checklist_slug: prevSlug,
                 coins_earned: dailyCoins,
+                bonus_coins: bonusCoins,
+                chore_coins: choreCoins,
                 dollars_earned: dailyDollars,
                 completed_at: isCompleted ? new Date().toISOString() : null
             }).catch(() => {}); // best effort
