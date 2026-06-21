@@ -1187,7 +1187,7 @@
             const profileId = Session.getProfileId();
             if (!profileId) { alert('Not logged in'); return; }
 
-            const today = new Date().toISOString().split('T')[0];
+            const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
             const dailyCoins = Storage.get('dailyCoins', 0);
             const dailyDollars = Storage.get('dailyDollars', 0);
             const checked = Storage.get(`${type}Checked`, []);
@@ -1218,7 +1218,8 @@
             const dailyDollars = Storage.get('dailyDollars', 0);
             if (dailyCoins === 0 && dailyDollars === 0) return; // nothing to save
 
-            const yesterday = new Date(now.getTime() - 86400000).toISOString().split('T')[0];
+            const yd = new Date(now.getTime() - 86400000);
+            const yesterday = `${yd.getFullYear()}-${String(yd.getMonth()+1).padStart(2,'0')}-${String(yd.getDate()).padStart(2,'0')}`;
             const checked = Storage.get(`${type}Checked`, []);
             const isCompleted = Storage.get(`${type}Completed`);
 
