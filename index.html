@@ -1187,6 +1187,7 @@
                     const dinnerType = getChecklistType('dinner');
                     Storage.remove(`${dinnerType}Checked`);
                     Storage.remove(`${dinnerType}Completed`);
+                    Storage.remove(`${dinnerType}CompletedCoins`);
                 }
                 
                 Storage.remove('morningBonusChecked');
@@ -1218,6 +1219,7 @@
                     const dinnerType = getChecklistType('dinner');
                     Storage.set(`${dinnerType}Checked`, []);
                     Storage.remove(`${dinnerType}Completed`);
+                    Storage.remove(`${dinnerType}CompletedCoins`);
                 }
                 
                 Storage.set('morningBonusChecked', []);
