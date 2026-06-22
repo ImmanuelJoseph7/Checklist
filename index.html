@@ -1253,24 +1253,33 @@
         // SAVE TO SUPABASE (manual, triggered by button)
         // ============================================================================
 
+        // Calculate actual coins earned from reward flags (not the running counter)
+        function calculateEarnedCoins(slug) {
+            const mainCoins = Storage.get(`${slug}CompletedCoins`, 0);
+            const dinnerSlug = slug === 'sundayEvening' ? 'sundayEveningDinner' :
+                               slug === 'holiday' ? 'holidayDinner' : 'eveningDinner';
+            const dinnerCoins = Storage.get(`${dinnerSlug}CompletedCoins`, 0);
+            const bonusCoins = getBonusRewards().length;
+            const choreCoins = (Storage.get(`${slug}ChoresRewards`, []).length) * 5;
+            return { total: mainCoins + dinnerCoins + bonusCoins + choreCoins, bonusCoins, choreCoins };
+        }
+
         async function saveProgress() {
             if (!sb) { alert('Not connected to database'); return; }
             const profileId = Session.getProfileId();
             if (!profileId) { alert('Not logged in'); return; }
 
             const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-            const dailyCoins = Storage.get('dailyCoins', 0);
+            const { total, bonusCoins, choreCoins } = calculateEarnedCoins(type);
             const dailyDollars = Storage.get('dailyDollars', 0);
             const isCompleted = Storage.get(`${type}Completed`);
-            const bonusCoins = getBonusRewards().length;
-            const choreCoins = (Storage.get(`${type}ChoresRewards`, []).length) * 5;
 
             try {
                 await DB.upsertDailyLog({
                     profile_id: profileId,
                     date: today,
                     checklist_slug: type,
-                    coins_earned: dailyCoins,
+                    coins_earned: total,
                     bonus_coins: bonusCoins,
                     chore_coins: choreCoins,
                     dollars_earned: dailyDollars,
@@ -1286,9 +1295,6 @@
             if (!sb) return;
             const profileId = Session.getProfileId();
             if (!profileId) return;
-            const dailyCoins = Storage.get('dailyCoins', 0);
-            const dailyDollars = Storage.get('dailyDollars', 0);
-            if (dailyCoins === 0 && dailyDollars === 0) return; // nothing to save
 
             const resetHour = isSaturday ? 0 : (isMorning ? 0 : 12);
             let prevDate, prevSlug;
@@ -1305,19 +1311,22 @@
                 else prevSlug = 'evening';
             }
 
+            const { total, bonusCoins, choreCoins } = calculateEarnedCoins(prevSlug);
+            const dailyDollars = Storage.get('dailyDollars', 0);
+            if (total === 0 && dailyDollars === 0) return; // nothing to save
+
             const isCompleted = Storage.get(`${prevSlug}Completed`);
-            const bonusCoins = getBonusRewards().length;
-            const choreCoins = (Storage.get(`${prevSlug}ChoresRewards`, []).length) * 5;
 
             DB.upsertDailyLog({
                 profile_id: profileId,
                 date: prevDate,
                 checklist_slug: prevSlug,
-                coins_earned: dailyCoins,
+                coins_earned: total,
                 bonus_coins: bonusCoins,
                 chore_coins: choreCoins,
                 dollars_earned: dailyDollars,
                 completed_at: isCompleted ? new Date().toISOString() : null
+            }).catch(() => {}); // best effort
             }).catch(() => {}); // best effort
         }
 
