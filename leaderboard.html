@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; padding: 10px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 16px; color: #333; }
+        .nav { display: flex; gap: 8px; margin-bottom: 16px; }
+        .nav a { padding: 8px 14px; border-radius: 6px; text-decoration: none; background: white; color: #667eea; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .nav a.active { background: #667eea; color: white; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 16px; margin-bottom: 12px; }
+        .week-label { font-size: 14px; color: #666; margin-bottom: 12px; text-align: center; }
+        .standing { display: flex; align-items: center; padding: 12px 0; border-bottom: 1px solid #eee; }
+        .standing:last-child { border-bottom: none; }
+        .rank { font-size: 24px; width: 40px; text-align: center; }
+        .name { flex: 1; font-size: 18px; font-weight: bold; }
+        .coins { font-size: 18px; color: #f59e0b; font-weight: bold; }
+        .winner-list { list-style: none; }
+        .winner-list li { padding: 10px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+        .winner-list li:last-child { border-bottom: none; }
+        .winner-week { font-size: 13px; color: #666; }
+        .winner-name { font-size: 16px; font-weight: bold; }
+        .winner-coins { font-size: 14px; color: #f59e0b; }
+        .trophy { font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 Leaderboard</h1>
+        <div class="nav">
+            <a href="index.html">✅ Checklist</a>
+            <a href="history.html">📅 History</a>
+            <a href="leaderboard.html" class="active">🏆 Board</a>
+            <a href="login.html" onclick="localStorage.removeItem('checklist_profile_id');localStorage.removeItem('checklist_profile_name');" style="margin-left:auto;">🚪 Switch</a>
+        </div>
+
+        <div class="card">
+            <div class="week-label" id="weekLabel">This Week</div>
+            <div id="standings">Loading...</div>
+        </div>
+
+        <div class="card">
+            <h3 style="margin-bottom:12px;text-align:center;">🏅 Past Winners</h3>
+            <ul class="winner-list" id="pastWinners"><li>Loading...</li></ul>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase.js"></script>
+    <script>
+        function getMonday(d) {
+            const date = new Date(d);
+            const day = date.getDay();
+            const diff = date.getDate() - day + (day === 0 ? -6 : 1);
+            return new Date(date.setDate(diff));
+        }
+
+        function formatDate(d) {
+            return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        }
+
+        async function loadLeaderboard() {
+            const today = new Date();
+            const monday = getMonday(today);
+            const sunday = new Date(monday);
+            sunday.setDate(sunday.getDate() + 6);
+            const weekStart = formatDate(monday);
+            const weekEnd = formatDate(sunday);
+
+            document.getElementById('weekLabel').textContent = `Week of ${monday.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} - ${sunday.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}`;
+
+            // Get all profiles
+            const profiles = await DB.getProfiles();
+
+            // Get this week's coins per profile
+            const { data: weekData } = await sb.from('daily_state')
+                .select('profile_id, coins_earned')
+                .gte('date', weekStart).lte('date', weekEnd);
+
+            // Aggregate
+            const totals = {};
+            profiles.forEach(p => { totals[p.id] = { name: p.name, emoji: p.avatar_emoji, coins: 0 }; });
+            (weekData || []).forEach(r => {
+                if (totals[r.profile_id]) totals[r.profile_id].coins += (r.coins_earned || 0);
+            });
+
+            // Sort by coins descending
+            const sorted = Object.values(totals).sort((a, b) => b.coins - a.coins);
+            const medals = ['🥇', '🥈', '🥉'];
+
+            document.getElementById('standings').innerHTML = sorted.map((p, i) => `
+                <div class="standing">
+                    <div class="rank">${medals[i] || (i+1)}</div>
+                    <div class="name">${p.emoji} ${p.name}</div>
+                    <div class="coins">🪙 ${p.coins}</div>
+                </div>
+            `).join('');
+
+            // Check if we need to store last week's winner
+            const lastMonday = new Date(monday);
+            lastMonday.setDate(lastMonday.getDate() - 7);
+            const lastWeekStart = formatDate(lastMonday);
+
+            const { data: existingWinner } = await sb.from('weekly_winners')
+                .select('*').eq('week_start', lastWeekStart).maybeSingle();
+
+            if (!existingWinner) {
+                // Calculate last week's winner
+                const lastSunday = new Date(lastMonday);
+                lastSunday.setDate(lastSunday.getDate() + 6);
+                const { data: lastWeekData } = await sb.from('daily_state')
+                    .select('profile_id, coins_earned')
+                    .gte('date', lastWeekStart).lte('date', formatDate(lastSunday));
+
+                const lastTotals = {};
+                profiles.forEach(p => { lastTotals[p.id] = 0; });
+                (lastWeekData || []).forEach(r => {
+                    if (lastTotals[r.profile_id] !== undefined) lastTotals[r.profile_id] += (r.coins_earned || 0);
+                });
+
+                const winnerId = Object.entries(lastTotals).sort((a, b) => b[1] - a[1])[0];
+                if (winnerId && winnerId[1] > 0) {
+                    await sb.from('weekly_winners').insert({
+                        week_start: lastWeekStart,
+                        profile_id: winnerId[0],
+                        coins: winnerId[1]
+                    }).catch(() => {});
+                }
+            }
+
+            // Load past winners
+            const { data: winners } = await sb.from('weekly_winners')
+                .select('*, profiles(name, avatar_emoji)')
+                .order('week_start', { ascending: false }).limit(10);
+
+            if (winners && winners.length > 0) {
+                document.getElementById('pastWinners').innerHTML = winners.map(w => {
+                    const d = new Date(w.week_start);
+                    const endD = new Date(d); endD.setDate(endD.getDate() + 6);
+                    return `<li>
+                        <div>
+                            <span class="winner-week">${d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })} - ${endD.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' })}</span><br>
+                            <span class="winner-name">🏆 ${w.profiles.avatar_emoji} ${w.profiles.name}</span>
+                        </div>
+                        <span class="winner-coins">🪙 ${w.coins}</span>
+                    </li>`;
+                }).join('');
+            } else {
+                document.getElementById('pastWinners').innerHTML = '<li style="color:#666;text-align:center;">No winners yet — check back next week!</li>';
+            }
+        }
+
+        loadLeaderboard();
+    </script>
+</body>
+</html>
