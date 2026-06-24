@@ -496,7 +496,8 @@
             const timer = document.getElementById(`timer${i+1}`);
             if (!timer) return;
             if (diff <= 0) {
-                const achieved = STATE.completed_at && !r.isDinner;
+                const mainCoins = STATE.coins_earned - STATE.bonus_coins - STATE.chore_coins - STATE.dinner_coins;
+                const achieved = r.isDinner ? STATE.dinner_coins > 0 : (STATE.completed_at && mainCoins >= r.coins);
                 timer.textContent = achieved ? '✓ Achieved!' : 'Expired';
                 timer.className = achieved ? 'timer achieved' : 'timer expired';
             } else {
