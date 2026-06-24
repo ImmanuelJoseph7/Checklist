@@ -251,7 +251,7 @@
                     if (reward.coins > 0) {
                         STATE.coins_earned += reward.coins;
                         totalCoins += reward.coins;
-                        showModal(reward.message, `Total coins: ${totalCoins}`);
+                        showModal(reward.message, `Today: ${STATE.coins_earned} coins`);
                     }
                 }
                 // Check afternoon completion
@@ -262,7 +262,7 @@
                     if (reward.coins > 0) {
                         STATE.coins_earned += reward.coins;
                         totalCoins += reward.coins;
-                        showModal(reward.message, `Total coins: ${totalCoins}`);
+                        showModal(reward.message, `Today: ${STATE.coins_earned} coins`);
                     }
                 }
             } else {
@@ -272,7 +272,7 @@
                     if (reward.coins > 0) {
                         STATE.coins_earned += reward.coins;
                         totalCoins += reward.coins;
-                        showModal(reward.message, `Total coins: ${totalCoins}`);
+                        showModal(reward.message, `Today: ${STATE.coins_earned} coins`);
                     }
                 }
             }
@@ -296,7 +296,7 @@
                 STATE.dinner_coins = 1;
                 STATE.coins_earned += 1;
                 totalCoins += 1;
-                showModal('🍽️ Great job finishing dinner!', `You earned 1 coin! Total: ${totalCoins}`);
+                showModal('🍽️ Great job finishing dinner!', `You earned 1 coin! Today: ${STATE.coins_earned} coins`);
             }
         }
         await saveState();
@@ -315,7 +315,7 @@
             STATE.bonus_coins += 1;
             STATE.coins_earned += 1;
             totalCoins += 1;
-            showModal('⭐ Great job!', `You earned 1 coin! Total: ${totalCoins}`, 2000);
+            showModal('⭐ Great job!', `You earned 1 coin! Today: ${STATE.coins_earned} coins`, 2000);
         }
         await saveState();
         render();
@@ -333,7 +333,7 @@
             STATE.chore_coins += 5;
             STATE.coins_earned += 5;
             totalCoins += 5;
-            showModal('🧹 Great work!', `You earned 5 coins! Total: ${totalCoins}`, 2000);
+            showModal('🧹 Great work!', `You earned 5 coins! Today: ${STATE.coins_earned} coins`, 2000);
         }
         await saveState();
         render();
@@ -365,7 +365,7 @@
             STATE.dollars_earned += dollars;
             totalDollars += dollars;
             const dollarStr = dollars === 1 ? '$1' : `${Math.round(dollars * 100)}¢`;
-            showModal(`💵 You earned ${dollarStr}!`, `Total: $${totalDollars.toFixed(2)}`);
+            showModal(`💵 You earned ${dollarStr}!`, `Today: $${STATE.dollars_earned.toFixed(2)}`);
         }
         await saveState();
         render();
@@ -453,7 +453,7 @@
 
         // Jobs
         if (shouldShowJobs()) {
-            html += `<div class="section-title">💵 Jobs (Total: $${totalDollars.toFixed(2)})</div>`;
+            html += `<div class="section-title">💵 Jobs (Today: $${STATE.dollars_earned.toFixed(2)})</div>`;
             html += ITEMS.jobs.map(item => {
                 const checked = STATE.checked_jobs.includes(item.id);
                 const d = parseFloat(item.dollars) || 0;
@@ -474,8 +474,8 @@
 
         document.getElementById('progress').style.width = percent + '%';
         document.getElementById('progress').textContent = percent + '%';
-        document.getElementById('coins').innerHTML = `🪙 Total: ${totalCoins} | Today: ${STATE.coins_earned}`;
-        document.getElementById('dollars').innerHTML = `💵 Total: $${totalDollars.toFixed(2)} | Today: $${STATE.dollars_earned.toFixed(2)}`;
+        document.getElementById('coins').innerHTML = `🪙 Today: ${STATE.coins_earned} coins`;
+        document.getElementById('dollars').innerHTML = `💵 Today: $${STATE.dollars_earned.toFixed(2)}`;
     }
 
     function renderRewards() {
@@ -517,3 +517,4 @@
     </script>
 </body>
 </html>
+
