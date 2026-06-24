@@ -145,7 +145,7 @@
     }
 
     // ========== STATE (from DB) ==========
-    let STATE = { checked_main: [], checked_dinner: [], checked_bonus: [], checked_chores: [], checked_jobs: [], coins_earned: 0, bonus_coins: 0, chore_coins: 0, dollars_earned: 0, completed_at: null };
+    let STATE = { checked_main: [], checked_dinner: [], checked_bonus: [], checked_chores: [], checked_jobs: [], coins_earned: 0, bonus_coins: 0, chore_coins: 0, dinner_coins: 0, dollars_earned: 0, completed_at: null };
 
     try {
         const existing = await DB.getState(PROFILE_ID, today, slug);
@@ -160,6 +160,7 @@
             STATE.chore_coins = existing.chore_coins || 0;
             STATE.dollars_earned = parseFloat(existing.dollars_earned) || 0;
             STATE.completed_at = existing.completed_at;
+            STATE.dinner_coins = existing.dinner_coins || 0;
         }
     } catch(e) { console.error('Failed to load state:', e); }
 
@@ -186,6 +187,7 @@
                 checked_bonus: STATE.checked_bonus, checked_chores: STATE.checked_chores,
                 checked_jobs: STATE.checked_jobs, coins_earned: STATE.coins_earned,
                 bonus_coins: STATE.bonus_coins, chore_coins: STATE.chore_coins,
+                dinner_coins: STATE.dinner_coins,
                 dollars_earned: STATE.dollars_earned,
                 completed_at: STATE.completed_at
             });
@@ -254,9 +256,15 @@
         const idx = STATE.checked_dinner.indexOf(uuid);
         if (idx > -1) {
             STATE.checked_dinner.splice(idx, 1);
+            if (STATE.dinner_coins > 0) {
+                STATE.dinner_coins = 0;
+                STATE.coins_earned = Math.max(0, STATE.coins_earned - 1);
+                totalCoins = Math.max(0, totalCoins - 1);
+            }
         } else {
             STATE.checked_dinner.push(uuid);
-            if (STATE.checked_dinner.length === ITEMS.dinner.length && now.getHours() < 19) {
+            if (STATE.checked_dinner.length === ITEMS.dinner.length && now.getHours() < 19 && STATE.dinner_coins === 0) {
+                STATE.dinner_coins = 1;
                 STATE.coins_earned += 1;
                 totalCoins += 1;
                 showModal('🍽️ Great job finishing dinner!', `You earned 1 coin! Total: ${totalCoins}`);
