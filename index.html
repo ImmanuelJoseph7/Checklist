@@ -246,32 +246,32 @@
                 // Check morning completion
                 const morningDone = ITEMS.main.every(i => STATE.checked_main.includes(i.id));
                 if (morningDone && !STATE.morning_completed_at) {
+                    STATE.morning_completed_at = new Date().toISOString();
                     const reward = calculateReward('morning');
                     if (reward.coins > 0) {
                         STATE.coins_earned += reward.coins;
                         totalCoins += reward.coins;
-                        STATE.morning_completed_at = new Date().toISOString();
                         showModal(reward.message, `Total coins: ${totalCoins}`);
                     }
                 }
                 // Check afternoon completion
                 const afternoonDone = ITEMS.afternoon.every(i => STATE.checked_main.includes(i.id));
                 if (afternoonDone && !STATE.afternoon_completed_at) {
+                    STATE.afternoon_completed_at = new Date().toISOString();
                     const reward = calculateReward('afternoon');
                     if (reward.coins > 0) {
                         STATE.coins_earned += reward.coins;
                         totalCoins += reward.coins;
-                        STATE.afternoon_completed_at = new Date().toISOString();
                         showModal(reward.message, `Total coins: ${totalCoins}`);
                     }
                 }
             } else {
                 if (STATE.checked_main.length === ITEMS.main.length && !STATE.completed_at) {
+                    STATE.completed_at = new Date().toISOString();
                     const reward = calculateReward('main');
                     if (reward.coins > 0) {
                         STATE.coins_earned += reward.coins;
                         totalCoins += reward.coins;
-                        STATE.completed_at = new Date().toISOString();
                         showModal(reward.message, `Total coins: ${totalCoins}`);
                     }
                 }
