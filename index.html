@@ -208,19 +208,6 @@
         return { coins: 0, message: '' };
     }
 
-    function checkDinnerReward() {
-        const h = now.getHours();
-        if (ITEMS.dinner.length === 0) return;
-        if (STATE.checked_dinner.length !== ITEMS.dinner.length) return;
-        // Check if dinner reward already given (completed_at with dinner coins)
-        if (STATE.coins_earned > STATE.bonus_coins + STATE.chore_coins + (STATE.completed_at ? calculateReward('main').coins : 0)) return;
-        if (h < 19) {
-            STATE.coins_earned += 1;
-            totalCoins += 1;
-            showModal('🍽️ Great job finishing dinner!', `You earned 1 coin! Total: ${totalCoins}`);
-        }
-    }
-
     // ========== TOGGLE FUNCTIONS ==========
     window.toggleMain = async function(uuid) {
         const idx = STATE.checked_main.indexOf(uuid);
@@ -229,22 +216,38 @@
             // If was completed, reverse coins
             if (STATE.completed_at) {
                 const reward = calculateReward('main');
-                STATE.coins_earned -= reward.coins;
-                totalCoins -= reward.coins;
+                STATE.coins_earned = Math.max(0, STATE.coins_earned - reward.coins);
+                totalCoins = Math.max(0, totalCoins - reward.coins);
                 STATE.completed_at = null;
             }
         } else {
             STATE.checked_main.push(uuid);
-            // Check if all main items complete
-            const allMain = isHoliday ? [...ITEMS.main, ...ITEMS.afternoon] : ITEMS.main;
-            if (STATE.checked_main.length === allMain.length && !STATE.completed_at) {
-                const section = isHoliday ? (STATE.checked_main.length === ITEMS.main.length ? 'morning' : 'afternoon') : 'main';
-                const reward = calculateReward(section);
-                if (reward.coins > 0) {
-                    STATE.coins_earned += reward.coins;
-                    totalCoins += reward.coins;
-                    STATE.completed_at = new Date().toISOString();
-                    showModal(reward.message, `Total coins: ${totalCoins}`);
+            // Check completion
+            if (isHoliday) {
+                // Holiday: check morning and afternoon separately
+                const morningDone = ITEMS.main.every(i => STATE.checked_main.includes(i.id));
+                const afternoonDone = ITEMS.afternoon.every(i => STATE.checked_main.includes(i.id));
+                // Award morning if just completed
+                if (morningDone && !STATE.completed_at) {
+                    const reward = calculateReward('morning');
+                    if (reward.coins > 0) {
+                        STATE.coins_earned += reward.coins;
+                        totalCoins += reward.coins;
+                        STATE.completed_at = new Date().toISOString();
+                        showModal(reward.message, `Total coins: ${totalCoins}`);
+                    }
+                }
+                // TODO: afternoon completion needs separate tracking if needed
+            } else {
+                const allMain = ITEMS.main;
+                if (STATE.checked_main.length === allMain.length && !STATE.completed_at) {
+                    const reward = calculateReward('main');
+                    if (reward.coins > 0) {
+                        STATE.coins_earned += reward.coins;
+                        totalCoins += reward.coins;
+                        STATE.completed_at = new Date().toISOString();
+                        showModal(reward.message, `Total coins: ${totalCoins}`);
+                    }
                 }
             }
         }
@@ -344,7 +347,7 @@
 
     window.resetChecklist = async function() {
         if (!confirm('Reset checklist? (History is kept)')) return;
-        STATE = { checked_main: [], checked_dinner: [], checked_bonus: [], checked_chores: [], checked_jobs: [], coins_earned: 0, bonus_coins: 0, chore_coins: 0, dollars_earned: 0, completed_at: null };
+        STATE = { checked_main: [], checked_dinner: [], checked_bonus: [], checked_chores: [], checked_jobs: [], coins_earned: 0, bonus_coins: 0, chore_coins: 0, dinner_coins: 0, dollars_earned: 0, completed_at: null };
         await saveState();
         render();
     };
