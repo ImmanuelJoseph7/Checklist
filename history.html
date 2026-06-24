@@ -135,11 +135,11 @@
             const byDate = {};
             let monthCoins = 0, monthDollars = 0, monthBonus = 0, monthChores = 0, monthRegular = 0;
             data.forEach(log => {
-                if (!byDate[log.date]) byDate[log.date] = { coins: 0, dollars: 0, completed: false, hasActivity: false };
+                if (!byDate[log.date]) byDate[log.date] = { coins: 0, dollars: 0, totalSlugs: 0, completedSlugs: 0 };
                 byDate[log.date].coins += (log.coins_earned || 0);
                 byDate[log.date].dollars += parseFloat(log.dollars_earned || 0);
-                if (log.completed_at || log.morning_completed_at || log.afternoon_completed_at) byDate[log.date].completed = true;
-                if (log.coins_earned > 0 || (log.checked_main && log.checked_main.length > 0)) byDate[log.date].hasActivity = true;
+                byDate[log.date].totalSlugs += 1;
+                if (log.completed_at || log.morning_completed_at || log.afternoon_completed_at) byDate[log.date].completedSlugs += 1;
                 monthCoins += (log.coins_earned || 0);
                 monthDollars += parseFloat(log.dollars_earned || 0);
                 monthBonus += (log.bonus_coins || 0);
@@ -159,7 +159,7 @@
                 const entry = byDate[dateStr];
                 const isToday = today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === d;
                 let classes = 'cal-day';
-                if (entry) classes += entry.completed ? ' completed' : ' partial';
+                if (entry) classes += (entry.completedSlugs === entry.totalSlugs) ? ' completed' : ' partial';
                 if (entry && entry.coins >= 10) classes += ' star-day';
                 if (isToday) classes += ' today';
 
