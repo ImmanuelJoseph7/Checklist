@@ -82,6 +82,8 @@
             <a href="history.html" class="active">📅 History</a>
             <a href="login.html" onclick="Session.clear()">🚪 Switch Kid</a>
         </div>
+        <div id="allTime" style="text-align:center;padding:12px;background:white;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:12px;font-size:16px;"></div>
+        </div>
         <div class="month-nav">
             <button onclick="prevMonth()">◀</button>
             <span class="month-label" id="monthLabel"></span>
@@ -192,6 +194,16 @@
                 </div>
             `;
         }
+
+        // Load all-time totals
+        (async function() {
+            try {
+                const { data } = await sb.from('daily_state').select('coins_earned, dollars_earned').eq('profile_id', Session.getProfileId());
+                const allCoins = data.reduce((s, r) => s + (r.coins_earned || 0), 0);
+                const allDollars = data.reduce((s, r) => s + (parseFloat(r.dollars_earned) || 0), 0);
+                document.getElementById('allTime').innerHTML = `🪙 All-Time: <strong>${allCoins}</strong> coins | 💵 <strong>$${allDollars.toFixed(2)}</strong>`;
+            } catch(e) { document.getElementById('allTime').style.display = 'none'; }
+        })();
 
         renderCalendar();
     </script>
