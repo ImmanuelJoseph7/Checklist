@@ -5,196 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kids Checklist</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 10px;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-        h1 {
-            text-align: center;
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        .checklist {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-        }
-        .section-title {
-            font-weight: bold;
-            color: #666;
-            padding: 10px;
-            background: #f9f9f9;
-            margin: 10px 0 5px 0;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        .item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            align-items: center;
-            font-size: 16px;
-        }
-        .item:last-child {
-            border-bottom: none;
-        }
-        input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-        .item.checked {
-            opacity: 0.5;
-            text-decoration: line-through;
-        }
-        .progress-container {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 15px;
-            margin-bottom: 10px;
-        }
-        .progress-bar {
-            width: 100%;
-            height: 30px;
-            background: #eee;
-            border-radius: 15px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4CAF50, #8BC34A);
-            transition: width 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        .coins {
-            text-align: center;
-            font-size: 18px;
-            color: #666;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 8px;
-        }
-        .reset-btn {
-            padding: 5px 12px;
-            background: #ff6b6b;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .reset-btn:hover {
-            background: #ff5252;
-        }
-        .rewards {
-            background: #fff9e6;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 2px solid #ffd700;
-        }
-        .rewards h3 {
-            margin: 0 0 8px 0;
-            font-size: 16px;
-            color: #333;
-            text-align: center;
-        }
-        .rewards ul {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-            font-size: 14px;
-            color: #666;
-        }
-        .rewards li {
-            padding: 4px 0;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-        }
-        .timer {
-            font-weight: bold;
-            color: #ff6b6b;
-            font-size: 13px;
-        }
-        .timer.expired {
-            color: #999;
-        }
-        .timer.achieved {
-            color: #4CAF50;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            align-items: center;
-            justify-content: center;
-        }
-        .modal.show {
-            display: flex;
-        }
-        .modal-content {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            text-align: center;
-            max-width: 300px;
-        }
-        .modal-content h2 {
-            margin-bottom: 15px;
-            font-size: 28px;
-        }
-        .modal-content p {
-            font-size: 20px;
-            color: #666;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f5f5f5; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 10px; }
+        .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; flex: 1; }
+        h1 { text-align: center; color: #333; font-size: 24px; margin-bottom: 10px; }
+        .checklist { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; overflow-y: auto; padding: 10px; }
+        .section-title { font-weight: bold; color: #666; padding: 10px; background: #f9f9f9; margin: 10px 0 5px 0; border-radius: 4px; font-size: 14px; }
+        .item { padding: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; font-size: 16px; }
+        .item:last-child { border-bottom: none; }
+        input[type="checkbox"] { width: 20px; height: 20px; margin-right: 10px; cursor: pointer; flex-shrink: 0; }
+        .item.checked { opacity: 0.5; text-decoration: line-through; }
+        .progress-container { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 15px; margin-bottom: 10px; }
+        .progress-bar { width: 100%; height: 30px; background: #eee; border-radius: 15px; overflow: hidden; margin-bottom: 10px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        .coins { text-align: center; font-size: 18px; color: #666; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; }
+        .reset-btn { padding: 5px 12px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .reset-btn:hover { background: #ff5252; }
+        .rewards { background: #fff9e6; border-radius: 8px; padding: 10px; margin-bottom: 10px; border: 2px solid #ffd700; }
+        .rewards h3 { margin: 0 0 8px 0; font-size: 16px; color: #333; text-align: center; }
+        .rewards ul { list-style: none; margin: 0; padding: 0; font-size: 14px; color: #666; }
+        .rewards li { padding: 4px 0; text-align: center; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .timer { font-weight: bold; color: #ff6b6b; font-size: 13px; }
+        .timer.expired { color: #999; }
+        .timer.achieved { color: #4CAF50; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: white; padding: 30px; border-radius: 12px; text-align: center; max-width: 300px; }
+        .modal-content h2 { margin-bottom: 15px; font-size: 28px; }
+        .modal-content p { font-size: 20px; color: #666; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #666; z-index: 999; }
     </style>
 </head>
 <body>
+    <div class="loading-overlay" id="loading">Loading checklist...</div>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="js/supabase.js"></script>
-    <script>
-        if (!Session.isLoggedIn()) { window.location.href = 'login.html'; }
-        // Background cache of checklist config from Supabase (for chores loading)
-        if (sb) { DB.getAllChecklists().catch(() => {}); }
-    </script>
+    <script>if (!Session.isLoggedIn()) { window.location.href = 'login.html'; }</script>
     <div class="container">
         <div style="display:flex;gap:8px;margin-bottom:10px;font-size:13px;">
             <a href="index.html" style="padding:6px 10px;background:#4CAF50;color:white;border-radius:4px;text-decoration:none;">✅ Checklist</a>
@@ -203,1148 +49,434 @@
         </div>
         <h1 id="title"></h1>
         <div class="progress-container">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress">0%</div>
-            </div>
-            <div class="coins" id="coins">🪙 Total Kindness Coins: 0</div>
-            <div class="coins" id="dollars">💵 Total Dollars: $0.00</div>
+            <div class="progress-bar"><div class="progress-fill" id="progress">0%</div></div>
+            <div class="coins" id="coins">🪙 0</div>
+            <div class="coins" id="dollars">💵 $0.00</div>
         </div>
         <div class="rewards" id="rewardsContainer"></div>
         <div style="text-align: center; margin-bottom: 10px;">
             <button class="reset-btn" onclick="resetChecklist()">Reset Checklist</button>
-            <button class="reset-btn" style="background:#4CAF50;" onclick="saveProgress()">💾 Save Progress</button>
         </div>
         <div class="checklist" id="checklist"></div>
     </div>
-
-    <div class="modal" id="modal">
-        <div class="modal-content">
-            <h2 id="modalTitle"></h2>
-            <p id="modalMessage"></p>
-        </div>
-    </div>
+    <div class="modal" id="modal"><div class="modal-content"><h2 id="modalTitle"></h2><p id="modalMessage"></p></div></div>
 
     <script>
-        // ============================================================================
-        // CONFIGURATION & DATA
-        // ============================================================================
-        
-        const CONFIG = {
-            morningEndHour: 12,
-            bonusStartHour: 12,
-            termDates: [
-                { start: '2026-01-27', end: '2026-04-02' },
-                { start: '2026-04-21', end: '2026-06-26' },
-                { start: '2026-07-15', end: '2026-09-18' },
-                { start: '2026-10-06', end: '2026-11-27' }
-            ],
-            rewards: {
-                weekdayMorning: [
-                    { hour: 7, minute: 45, coins: 3, label: '🌟 Complete before 7:45am = 3 coins' },
-                    { hour: 8, minute: 0, coins: 1, label: '⭐ Complete before 8:00am = 1 coin' }
-                ],
-                sundayMorning: [
-                    { hour: 9, minute: 30, coins: 3, label: '🌟 Complete before 9:30am = 3 coins' }
-                ],
-                evening: [
-                    { hour: 17, minute: 0, coins: 3, label: '🌟 Complete main tasks before 5:00pm = 3 coins' },
-                    { hour: 18, minute: 0, coins: 1, label: '⭐ Complete main tasks before 6:00pm = 1 coin' },
-                    { hour: 19, minute: 0, coins: 1, label: '🍽️ Finish dinner by 7:00pm = 1 coin', isDinner: true }
-                ],
-                saturday: { coins: 3 },
-                holidayMorning: [
-                    { hour: 12, minute: 0, coins: 3, label: '🌟 Complete morning tasks before noon = 3 coins' }
-                ],
-                holidayAfternoon: [
-                    { hour: 19, minute: 0, coins: 3, label: '🌟 Complete afternoon tasks before 7:00pm = 3 coins' }
-                ],
-                tvUnlock: { hour: 14, minute: 30 }
-            }
-        };
+    // === FULL DB-DRIVEN APP ===
+    (async function() {
 
-        const DEFAULT_ITEMS = {
-            morning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🪥 Brush Teeth', '💧 Wash face', '🧴 Moisturise', '👔 Wear uniform', '🍱 Pack lunchbag', '💧 Pack water bottle', '🎒 Pack bag', '🍳 Eat breakfast', '👟 Put on socks & shoes'],
-            evening: ['🍱 Put lunchbox in sink (finish food if not empty)', '🧊 Put ice pack FLAT in freezer', '🚽 Poo Poo', '🚿 Shower', '🧴 Moisturise', '📝 Homework', '📚 Library Book', '📖 Read Bible'],
-            eveningDinner: ['🍽️ Dinner'],
-            saturday: ['🙏 Pray', '🛏️ Make Bed', '💧 Wash face', '🚽 Wee Wee', '🚿 Shower', '🪥 Brush Teeth', '🧴 Moisturise', '👕 Get Dressed', '🍳 Eat breakfast', '💧 Fill water bottle', '🍽️ Eat lunch', '🚽 Poo Poo', '🍽️ Eat dinner', '📖 Read Bible'],
-            sundayMorning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🚿 Shower', '🪥 Brush Teeth', '💧 Wash face', '🧴 Moisturise', '👕 Get Dressed', '💧 Fill water bottle', '🥞 Eat breakfast', '👟 Put on socks & shoes'],
-            sundayEvening: ['🚽 Poo Poo', '📖 Read Bible'],
-            sundayEveningDinner: ['🍽️ Dinner'],
-            holidayMorning: ['🙏 Pray', '🛏️ Make Bed', '🚽 Wee Wee', '🪥 Brush Teeth', '💧 Wash face', '🚽 Poo Poo', '🚿 Shower', '🧴 Moisturise', '👕 Get Dressed', '🍳 Eat breakfast', '📚 Read for 30 minutes', '🤝 Play with sibling without fighting for 30 minutes', '📖 Read Bible'],
-            holidayAfternoon: ['🍽️ Eat lunch', '📚 Read for 30 minutes', '🌳 Play outside for 30 minutes'],
-            holidayAfternoonDinner: ['🍽️ Dinner'],
-            holidayDinner: ['🍽️ Dinner'],
-            morningBonus: ['😴 I went to sleep last night without mucking around!'],
-            eveningBonus: ['😊 I used manners today!', '🤗 I was polite by responding to others with a happy smile!', '👂 I listened to mummy and daddy immediately!'],
-            jobs: [
-                { text: '🪴 Watered plants with sibling', dollars: 0.50, group: 'watering' },
-                { text: '🪴 Watered plants by myself', dollars: 1.00, group: 'watering' }
-            ],
-            chores: ['🍽️ Empty the dishwasher']
-        };
 
-        // Load all checklist items from Supabase cache if available
-        (function() {
-            const cached = localStorage.getItem('cache_all_checklists');
-            if (!cached) return;
-            try {
-                const checklists = JSON.parse(cached);
-                checklists.forEach(cl => {
-                    const items = (cl.checklist_items || []).sort((a,b) => a.sort_order - b.sort_order);
-                    const main = items.filter(i => i.section === 'main').map(i => i.text);
-                    const dinner = items.filter(i => i.section === 'dinner').map(i => i.text);
-                    const bonus = items.filter(i => i.section === 'bonus').map(i => i.text);
-                    const afternoon = items.filter(i => i.section === 'afternoon').map(i => i.text);
-                    const jobs = items.filter(i => i.section === 'jobs').map(i => ({ text: i.text, dollars: parseFloat(i.dollars) || 0, group: i.job_group || 'independent' }));
-                    const chores = items.filter(i => i.section === 'chores').map(i => i.text);
-
-                    if (main.length > 0) DEFAULT_ITEMS[cl.slug] = main;
-                    if (dinner.length > 0) DEFAULT_ITEMS[cl.slug + 'Dinner'] = dinner;
-                    if (bonus.length > 0) {
-                        if (cl.slug === 'morning') DEFAULT_ITEMS.morningBonus = bonus;
-                        else if (cl.slug === 'evening') DEFAULT_ITEMS.eveningBonus = bonus;
-                    }
-                    if (afternoon.length > 0 && cl.slug === 'holiday') DEFAULT_ITEMS.holidayAfternoon = afternoon;
-                    if (cl.slug === 'holiday' && main.length > 0) DEFAULT_ITEMS.holidayMorning = main;
-                    if (jobs.length > 0) DEFAULT_ITEMS.jobs = jobs;
-                    if (chores.length > 0) DEFAULT_ITEMS.chores = chores;
-                });
-            } catch(e) {}
-        })();
-
-        // ============================================================================
-        // TIME & CONTEXT STATE
-        // ============================================================================
-        
-        // TEST MODE: Set to a specific date/time for testing, or null for real time
-        // const TEST_TIME = new Date(2026, 3, 10, 14, 0, 0); // 2pm Friday April 10 (school holidays)
-        const TEST_TIME = null; // Real time
-        
-        function getCurrentTime() {
-            return TEST_TIME ? new Date(TEST_TIME) : new Date();
+    // ========== CONFIG ==========
+    const CONFIG = {
+        morningEndHour: 12, bonusStartHour: 12,
+        termDates: [
+            { start: '2026-01-27', end: '2026-04-02' },
+            { start: '2026-04-21', end: '2026-06-26' },
+            { start: '2026-07-15', end: '2026-09-18' },
+            { start: '2026-10-06', end: '2026-11-27' }
+        ],
+        rewards: {
+            weekdayMorning: [ { hour: 7, minute: 45, coins: 3, label: '🌟 Complete before 7:45am = 3 coins' }, { hour: 8, minute: 0, coins: 1, label: '⭐ Complete before 8:00am = 1 coin' } ],
+            sundayMorning: [ { hour: 9, minute: 30, coins: 3, label: '🌟 Complete before 9:30am = 3 coins' } ],
+            evening: [ { hour: 17, minute: 0, coins: 3, label: '🌟 Complete main tasks before 5:00pm = 3 coins' }, { hour: 18, minute: 0, coins: 1, label: '⭐ Complete main tasks before 6:00pm = 1 coin' }, { hour: 19, minute: 0, coins: 1, label: '🍽️ Finish dinner by 7:00pm = 1 coin', isDinner: true } ],
+            saturday: { coins: 3 },
+            holidayMorning: [ { hour: 12, minute: 0, coins: 3, label: '🌟 Complete morning tasks before noon = 3 coins' } ],
+            holidayAfternoon: [ { hour: 19, minute: 0, coins: 3, label: '🌟 Complete afternoon tasks before 7:00pm = 3 coins' } ],
+            tvUnlock: { hour: 14, minute: 30 }
         }
-        
-        const now = getCurrentTime();
-        const hour = now.getHours();
-        const dayOfWeek = now.getDay();
-        const isSunday = dayOfWeek === 0;
-        const isSaturday = dayOfWeek === 6;
-        const isWeekday = !isSaturday && !isSunday;
-        const isMorning = hour < CONFIG.morningEndHour;
+    };
 
-        function isHolidayDate(date) {
-            if (!isWeekday) return false;
-            const y = date.getFullYear();
-            const m = String(date.getMonth() + 1).padStart(2, '0');
-            const d = String(date.getDate()).padStart(2, '0');
-            const dateStr = `${y}-${m}-${d}`;
-            return !CONFIG.termDates.some(t => dateStr >= t.start && dateStr <= t.end);
+    // ========== TIME DETECTION ==========
+    const now = new Date();
+    const hour = now.getHours();
+    const dayOfWeek = now.getDay();
+    const isSunday = dayOfWeek === 0;
+    const isSaturday = dayOfWeek === 6;
+    const isWeekday = !isSaturday && !isSunday;
+    const isMorning = hour < CONFIG.morningEndHour;
+    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+    function isHolidayDate() {
+        if (!isWeekday) return false;
+        return !CONFIG.termDates.some(t => today >= t.start && today <= t.end);
+    }
+    const isHoliday = isHolidayDate();
+
+    const slug = isSaturday ? 'saturday' :
+                 isSunday ? (isMorning ? 'sundayMorning' : 'sundayEvening') :
+                 isHoliday ? 'holiday' :
+                 (isMorning ? 'morning' : 'evening');
+
+    const title = isSaturday ? '☀️ Saturday Checklist' :
+                  isSunday ? (isMorning ? '☀️ Sunday Morning Checklist' : '🌙 Sunday Evening Checklist') :
+                  isHoliday ? '🏖️ Holiday Checklist' :
+                  (isMorning ? '🌅 Morning Checklist' : '🌙 Evening Checklist');
+
+    const PROFILE_ID = Session.getProfileId();
+
+    // ========== LOAD ITEMS FROM DB ==========
+    let ITEMS = { main: [], dinner: [], bonus: [], chores: [], jobs: [], afternoon: [] };
+    let ALL_ITEMS_MAP = {}; // uuid -> item object
+
+    try {
+        const checklists = await DB.getAllChecklists();
+        const cl = checklists.find(c => c.slug === slug);
+        if (cl && cl.checklist_items) {
+            const sorted = cl.checklist_items.sort((a,b) => a.sort_order - b.sort_order);
+            ITEMS.main = sorted.filter(i => i.section === 'main');
+            ITEMS.dinner = sorted.filter(i => i.section === 'dinner');
+            ITEMS.bonus = sorted.filter(i => i.section === 'bonus');
+            ITEMS.chores = sorted.filter(i => i.section === 'chores');
+            ITEMS.jobs = sorted.filter(i => i.section === 'jobs');
+            ITEMS.afternoon = sorted.filter(i => i.section === 'afternoon');
+            // For holiday, morning items are in 'main', afternoon in 'afternoon'
         }
-        const isHoliday = isHolidayDate(now);
-
-        const type = isSaturday ? 'saturday' :
-                     isSunday ? (isMorning ? 'sundayMorning' : 'sundayEvening') :
-                     isHoliday ? 'holiday' :
-                     (isMorning ? 'morning' : 'evening');
-
-        const title = isSaturday ? '☀️ Saturday Checklist' :
-                      isSunday ? (isMorning ? '☀️ Sunday Morning Checklist' : '🌙 Sunday Evening Checklist') :
-                      isHoliday ? '🏖️ Holiday Checklist' :
-                      (isMorning ? '🌅 Morning Checklist' : '🌙 Evening Checklist');
-
-        // ============================================================================
-        // STORAGE HELPERS
-        // ============================================================================
-        
-        const Storage = {
-            get(key, defaultValue = null) {
-                const value = localStorage.getItem(key);
-                if (!value) return defaultValue;
-                try { return JSON.parse(value); } catch(e) { return value; }
-            },
-            set(key, value) {
-                localStorage.setItem(key, JSON.stringify(value));
-            },
-            remove(key) {
-                localStorage.removeItem(key);
-            }
-        };
-
-        // ============================================================================
-        // CHECKLIST DATA MANAGEMENT
-        // ============================================================================
-        
-        function getChecklistType(section = 'main') {
-            if (section === 'dinner') {
-                if (isSunday) return 'sundayEveningDinner';
-                if (isHoliday) return 'holidayDinner';
-                return 'eveningDinner';
-            }
-            if (section === 'bonus') {
-                return isMorning ? 'morningBonus' : 'eveningBonus';
-            }
-            return type;
+        // Also load bonus from morning/evening checklist if on saturday
+        if (isSaturday) {
+            const morn = checklists.find(c => c.slug === 'morning');
+            const eve = checklists.find(c => c.slug === 'evening');
+            if (morn) ITEMS.bonus = [...(morn.checklist_items||[]).filter(i=>i.section==='bonus').sort((a,b)=>a.sort_order-b.sort_order)];
+            if (eve) ITEMS.bonus = [...ITEMS.bonus, ...(eve.checklist_items||[]).filter(i=>i.section==='bonus').sort((a,b)=>a.sort_order-b.sort_order)];
         }
+        // Build UUID map
+        [...ITEMS.main, ...ITEMS.dinner, ...ITEMS.bonus, ...ITEMS.chores, ...ITEMS.jobs, ...ITEMS.afternoon].forEach(i => { ALL_ITEMS_MAP[i.id] = i; });
+    } catch(e) {
+        console.error('Failed to load items:', e);
+    }
 
-        function getItems(section = 'main') {
-            if (section === 'main' && isHoliday) {
-                return [...DEFAULT_ITEMS.holidayMorning, ...DEFAULT_ITEMS.holidayAfternoon];
-            }
-            const checklistType = section === 'main' ? type : getChecklistType(section);
-            return Storage.get(`${checklistType}Items`, DEFAULT_ITEMS[checklistType] || []);
+    // ========== STATE (from DB) ==========
+    let STATE = { checked_main: [], checked_dinner: [], checked_bonus: [], checked_chores: [], checked_jobs: [], coins_earned: 0, bonus_coins: 0, chore_coins: 0, dollars_earned: 0, completed_at: null };
+
+    try {
+        const existing = await DB.getState(PROFILE_ID, today, slug);
+        if (existing) {
+            STATE.checked_main = existing.checked_main || [];
+            STATE.checked_dinner = existing.checked_dinner || [];
+            STATE.checked_bonus = existing.checked_bonus || [];
+            STATE.checked_chores = existing.checked_chores || [];
+            STATE.checked_jobs = existing.checked_jobs || [];
+            STATE.coins_earned = existing.coins_earned || 0;
+            STATE.bonus_coins = existing.bonus_coins || 0;
+            STATE.chore_coins = existing.chore_coins || 0;
+            STATE.dollars_earned = parseFloat(existing.dollars_earned) || 0;
+            STATE.completed_at = existing.completed_at;
         }
+    } catch(e) { console.error('Failed to load state:', e); }
 
-        function getChecked(section = 'main') {
-            const checklistType = section === 'main' ? type : getChecklistType(section);
-            return Storage.get(`${checklistType}Checked`, []);
+    // Get total coins across all days
+    let totalCoins = 0, totalDollars = 0;
+    try {
+        const { data } = await sb.from('daily_state').select('coins_earned, dollars_earned').eq('profile_id', PROFILE_ID);
+        if (data) {
+            totalCoins = data.reduce((s, r) => s + (r.coins_earned || 0), 0);
+            totalDollars = data.reduce((s, r) => s + (parseFloat(r.dollars_earned) || 0), 0);
         }
+    } catch(e) {}
 
-        function saveChecked(checked, section = 'main') {
-            const checklistType = section === 'main' ? type : getChecklistType(section);
-            Storage.set(`${checklistType}Checked`, checked);
-        }
-
-        function shouldShowSection(section) {
-            if (section === 'dinner') return !isMorning && !isSaturday;
-            if (section === 'bonus') {
-                if (isMorning && !isSaturday) return true;
-                if (hour >= CONFIG.bonusStartHour && !isSaturday) return true;
-                if (isSaturday && hour >= CONFIG.bonusStartHour) return true;
-            }
-            return false;
-        }
-
-        function getBonusItems() {
-            if (!shouldShowSection('bonus')) return [];
-            
-            if (isMorning && !isSaturday) {
-                return getItems('bonus');
-            }
-            
-            if (isSaturday && hour >= CONFIG.bonusStartHour) {
-                const morning = Storage.get('morningBonusItems', DEFAULT_ITEMS.morningBonus);
-                const evening = Storage.get('eveningBonusItems', DEFAULT_ITEMS.eveningBonus);
-                return [...morning, ...evening];
-            }
-            
-            if (!isMorning && !isSaturday && hour >= CONFIG.bonusStartHour) {
-                return getItems('bonus');
-            }
-            
-            return [];
-        }
-
-        function getBonusChecked() {
-            if (!shouldShowSection('bonus')) return [];
-            
-            if (isMorning && !isSaturday) {
-                return Storage.get('morningBonusChecked', []);
-            }
-            
-            if (isSaturday && hour >= CONFIG.bonusStartHour) {
-                const morning = Storage.get('morningBonusChecked', []);
-                const evening = Storage.get('eveningBonusChecked', []);
-                return [...morning, ...evening];
-            }
-            
-            if (!isMorning && !isSaturday && hour >= CONFIG.bonusStartHour) {
-                return Storage.get('eveningBonusChecked', []);
-            }
-            
-            return [];
-        }
-
-        function saveBonusChecked(checked) {
-            if (isMorning && !isSaturday) {
-                Storage.set('morningBonusChecked', checked);
-            } else if (isSaturday && hour >= CONFIG.bonusStartHour) {
-                const morningCount = DEFAULT_ITEMS.morningBonus.length;
-                Storage.set('morningBonusChecked', checked.slice(0, morningCount));
-                Storage.set('eveningBonusChecked', checked.slice(morningCount));
-            } else if (!isMorning && !isSaturday && hour >= CONFIG.bonusStartHour) {
-                Storage.set('eveningBonusChecked', checked);
-            }
-        }
-
-        function getBonusRewards() {
-            if (isMorning && !isSaturday) {
-                return Storage.get('morningBonusRewards', []);
-            } else if (isSaturday && hour >= CONFIG.bonusStartHour) {
-                const morning = Storage.get('morningBonusRewards', []);
-                const evening = Storage.get('eveningBonusRewards', []);
-                return [...morning, ...evening];
-            } else if (!isMorning && !isSaturday && hour >= CONFIG.bonusStartHour) {
-                return Storage.get('eveningBonusRewards', []);
-            }
-            return [];
-        }
-
-        function saveBonusRewards(rewards) {
-            if (isMorning && !isSaturday) {
-                Storage.set('morningBonusRewards', rewards);
-            } else if (isSaturday && hour >= CONFIG.bonusStartHour) {
-                const morningCount = DEFAULT_ITEMS.morningBonus.length;
-                const morningRewards = rewards.filter(r => r < morningCount);
-                const eveningRewards = rewards.filter(r => r >= morningCount).map(r => r - morningCount);
-                Storage.set('morningBonusRewards', morningRewards);
-                Storage.set('eveningBonusRewards', eveningRewards);
-            } else if (!isMorning && !isSaturday && hour >= CONFIG.bonusStartHour) {
-                Storage.set('eveningBonusRewards', rewards);
-            }
-        }
-
-        // ============================================================================
-
-        // ============================================================================
-        // JOBS MANAGEMENT
-        // ============================================================================
-        
-        function shouldShowJobs() {
-            return isSaturday || !isMorning;
-        }
-
-        function getJobsKey(suffix) {
-            if (isSaturday) return `saturday${suffix}`;
-            if (isSunday) return `sundayEvening${suffix}`;
-            if (isHoliday) return `holidayAfternoon${suffix}`;
-            return `evening${suffix}`;
-        }
-
-        function getJobsChecked() {
-            if (!shouldShowJobs()) return [];
-            return Storage.get(getJobsKey('JobsChecked'), []);
-        }
-
-        function saveJobsChecked(checked) {
-            if (!shouldShowJobs()) return;
-            Storage.set(getJobsKey('JobsChecked'), checked);
-        }
-
-        function getJobsCompleted() {
-            if (!shouldShowJobs()) return [];
-            return Storage.get(getJobsKey('JobsCompleted'), []);
-        }
-
-        function saveJobsCompleted(completed) {
-            if (!shouldShowJobs()) return;
-            Storage.set(getJobsKey('JobsCompleted'), completed);
-        }
-
-        function checkJobsCompletion(index) {
-            if (!shouldShowJobs()) return;
-            
-            const completed = getJobsCompleted();
-            if (completed.includes(index)) return;
-            
-            const job = DEFAULT_ITEMS.jobs[index];
-            const total = addDollars(job.dollars);
-            const daily = getDailyDollars();
-            completed.push(index);
-            saveJobsCompleted(completed);
-            
-            const dollarStr = job.dollars === 1 ? '$1' : `${Math.round(job.dollars * 100)}¢`;
-            showModal(`💵 You earned ${dollarStr}!`, `Today: ${formatDollars(daily)} | Total: ${formatDollars(total)}`);
-        }
-
-        function formatDollars(amount) {
-            return `$${amount.toFixed(2)}`;
-        }
-        // COINS MANAGEMENT
-        // ============================================================================
-        
-        function getCoins() {
-            return Storage.get('totalCoins', 0);
-        }
-
-        function getDailyCoins() {
-            return Storage.get('dailyCoins', 0);
-        }
-
-        function addCoins(amount) {
-            const total = getCoins() + amount;
-            const daily = getDailyCoins() + amount;
-            Storage.set('totalCoins', total);
-            Storage.set('dailyCoins', daily);
-            return total;
-        }
-
-        function removeCoins(amount) {
-            const total = Math.max(0, getCoins() - amount);
-            const daily = Math.max(0, getDailyCoins() - amount);
-            Storage.set('totalCoins', total);
-            Storage.set('dailyCoins', daily);
-            return total;
-        }
+    document.getElementById('loading').style.display = 'none';
 
 
-        // ============================================================================
-        // DOLLAR TRACKING (JOBS)
-        // ============================================================================
-        
-        function getDollars() {
-            return Storage.get('totalDollars', 0);
-        }
 
-        function getDailyDollars() {
-            return Storage.get('dailyDollars', 0);
-        }
+    // ========== SAVE TO DB ==========
+    async function saveState() {
+        try {
+            await DB.saveState({
+                profile_id: PROFILE_ID, date: today, checklist_slug: slug,
+                checked_main: STATE.checked_main, checked_dinner: STATE.checked_dinner,
+                checked_bonus: STATE.checked_bonus, checked_chores: STATE.checked_chores,
+                checked_jobs: STATE.checked_jobs, coins_earned: STATE.coins_earned,
+                bonus_coins: STATE.bonus_coins, chore_coins: STATE.chore_coins,
+                dollars_earned: STATE.dollars_earned,
+                completed_at: STATE.completed_at
+            });
+        } catch(e) { console.error('Save failed:', e); }
+    }
 
-        function addDollars(amount) {
-            const total = getDollars() + amount;
-            const daily = getDailyDollars() + amount;
-            Storage.set('totalDollars', total);
-            Storage.set('dailyDollars', daily);
-            return total;
-        }
-
-        function removeDollars(amount) {
-            const total = Math.max(0, getDollars() - amount);
-            const daily = Math.max(0, getDailyDollars() - amount);
-            Storage.set('totalDollars', total);
-            Storage.set('dailyDollars', daily);
-            return total;
-        }
-        // ============================================================================
-        // REWARD LOGIC
-        // ============================================================================
-        
-        function calculateReward(section = 'morning') {
-            const now = getCurrentTime();
-            const hour = now.getHours();
-            const mins = now.getMinutes();
-            
-            if (isSaturday) {
-                return { coins: CONFIG.rewards.saturday.coins, message: '🎉 Congratulations! You have earned 3 kindness coins!' };
-            }
-
-            if (isHoliday) {
-                const rewardConfig = section === 'morning' ? CONFIG.rewards.holidayMorning : CONFIG.rewards.holidayAfternoon;
-                for (const reward of rewardConfig) {
-                    if (hour < reward.hour || (hour === reward.hour && mins < reward.minute)) {
-                        return { coins: reward.coins, message: '🎉 Congratulations! You have earned 3 kindness coins!' };
-                    }
-                }
-                return { coins: 0, message: '' };
-            }
-            
-            const rewardConfig = isMorning ? 
-                (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) :
-                CONFIG.rewards.evening.filter(r => !r.isDinner);
-            
-            for (const reward of rewardConfig) {
-                if (hour < reward.hour || (hour === reward.hour && mins < reward.minute)) {
-                    const message = reward.coins === 3 ? 
-                        '🎉 Congratulations! You have earned 3 kindness coins!' :
-                        '👏 Well done! You have earned 1 kindness coin!';
-                    return { coins: reward.coins, message };
-                }
-            }
-            
+    // ========== REWARD CALCULATION ==========
+    function calculateReward(section) {
+        const h = now.getHours(), m = now.getMinutes();
+        if (isSaturday) return { coins: CONFIG.rewards.saturday.coins, message: '🎉 Congratulations! You have earned 3 kindness coins!' };
+        if (isHoliday) {
+            const cfg = section === 'morning' ? CONFIG.rewards.holidayMorning : CONFIG.rewards.holidayAfternoon;
+            for (const r of cfg) { if (h < r.hour || (h === r.hour && m < r.minute)) return { coins: r.coins, message: '🎉 Congratulations! You have earned 3 kindness coins!' }; }
             return { coins: 0, message: '' };
         }
+        const cfg = isMorning ? (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) : CONFIG.rewards.evening.filter(r => !r.isDinner);
+        for (const r of cfg) { if (h < r.hour || (h === r.hour && m < r.minute)) return { coins: r.coins, message: r.coins === 3 ? '🎉 Congratulations! You have earned 3 kindness coins!' : '👏 Well done! You have earned 1 kindness coin!' }; }
+        return { coins: 0, message: '' };
+    }
 
-        function checkMainCompletion() {
-            if (isHoliday) {
-                checkHolidayMorningCompletion();
-                checkHolidayAfternoonCompletion();
-                checkTVUnlock();
-                return;
-            }
-
-            const items = getItems('main');
-            const checked = getChecked('main');
-            
-            if (checked.length !== items.length || items.length === 0) return;
-            
-            const completedKey = `${type}Completed`;
-            if (Storage.get(completedKey)) return;
-            
-            const reward = calculateReward();
-            if (reward.coins > 0) {
-                const total = addCoins(reward.coins);
-                Storage.set(completedKey, true);
-                Storage.set(`${completedKey}Coins`, reward.coins);
-                updateProgress();
-                showModal(reward.message, `Total coins: ${total}`);
-            }
+    function checkDinnerReward() {
+        const h = now.getHours();
+        if (ITEMS.dinner.length === 0) return;
+        if (STATE.checked_dinner.length !== ITEMS.dinner.length) return;
+        // Check if dinner reward already given (completed_at with dinner coins)
+        if (STATE.coins_earned > STATE.bonus_coins + STATE.chore_coins + (STATE.completed_at ? calculateReward('main').coins : 0)) return;
+        if (h < 19) {
+            STATE.coins_earned += 1;
+            totalCoins += 1;
+            showModal('🍽️ Great job finishing dinner!', `You earned 1 coin! Total: ${totalCoins}`);
         }
+    }
 
-        function checkHolidayMorningCompletion() {
-            const morningItems = DEFAULT_ITEMS.holidayMorning;
-            const checked = getChecked('main');
-            const morningCount = morningItems.length;
-            const morningChecked = checked.filter(i => i < morningCount);
-            if (morningChecked.length !== morningCount) return;
-
-            const completedKey = 'holidayMorningCompleted';
-            if (Storage.get(completedKey)) return;
-
-            const reward = calculateReward('morning');
-            if (reward.coins > 0) {
-                const total = addCoins(reward.coins);
-                Storage.set(completedKey, true);
-                Storage.set(`${completedKey}Coins`, reward.coins);
-                updateProgress();
-                showModal(reward.message, `Total coins: ${total}`);
+    // ========== TOGGLE FUNCTIONS ==========
+    window.toggleMain = async function(uuid) {
+        const idx = STATE.checked_main.indexOf(uuid);
+        if (idx > -1) {
+            STATE.checked_main.splice(idx, 1);
+            // If was completed, reverse coins
+            if (STATE.completed_at) {
+                const reward = calculateReward('main');
+                STATE.coins_earned -= reward.coins;
+                totalCoins -= reward.coins;
+                STATE.completed_at = null;
             }
-        }
-
-        function checkHolidayAfternoonCompletion() {
-            const morningItems = DEFAULT_ITEMS.holidayMorning;
-            const afternoonItems = DEFAULT_ITEMS.holidayAfternoon;
-            const checked = getChecked('main');
-            const morningCount = morningItems.length;
-            const afternoonChecked = checked.filter(i => i >= morningCount && i < morningCount + afternoonItems.length);
-            if (afternoonChecked.length !== afternoonItems.length) return;
-
-            const completedKey = 'holidayAfternoonCompleted';
-            if (Storage.get(completedKey)) return;
-
-            const reward = calculateReward('afternoon');
-            if (reward.coins > 0) {
-                const total = addCoins(reward.coins);
-                Storage.set(completedKey, true);
-                Storage.set(`${completedKey}Coins`, reward.coins);
-                updateProgress();
-                showModal(reward.message, `Total coins: ${total}`);
-            }
-        }
-
-        function checkTVUnlock() {
-            const morningItems = DEFAULT_ITEMS.holidayMorning;
-            const afternoonItems = DEFAULT_ITEMS.holidayAfternoon;
-            const checked = getChecked('main');
-            const morningCount = morningItems.length;
-
-            // All morning items checked
-            const morningDone = morningItems.every((_, i) => checked.includes(i));
-            // Lunch is first item in afternoon section
-            const lunchIndex = morningCount; // index of '🍽️ Eat lunch'
-            const lunchDone = checked.includes(lunchIndex);
-
-            const now = getCurrentTime();
-            const tv = CONFIG.rewards.tvUnlock;
-            const beforeDeadline = now.getHours() < tv.hour || (now.getHours() === tv.hour && now.getMinutes() < tv.minute);
-
-            const unlocked = morningDone && lunchDone && beforeDeadline;
-            const alreadyShown = Storage.get('holidayTVUnlockShown');
-
-            if (unlocked && !alreadyShown) {
-                Storage.set('holidayTVUnlockShown', true);
-                showModal('📺 TV Time Unlocked!', 'Great job! You can watch TV or use a device!', 4000);
-            }
-
-            renderTVBanner(unlocked);
-        }
-
-        function renderTVBanner(unlocked) {
-            let banner = document.getElementById('tvBanner');
-            if (!isHoliday) { if (banner) banner.remove(); return; }
-            if (!banner) {
-                banner = document.createElement('div');
-                banner.id = 'tvBanner';
-                banner.style.cssText = 'background:#4CAF50;color:white;text-align:center;padding:12px;border-radius:8px;font-size:18px;font-weight:bold;margin-bottom:10px;display:none;';
-                document.querySelector('.container').insertBefore(banner, document.getElementById('checklist'));
-            }
-            if (unlocked) {
-                banner.textContent = '📺 TV / Device Time Unlocked!';
-                banner.style.display = 'block';
-            } else {
-                banner.style.display = 'none';
-            }
-        }
-
-        function checkDinnerCompletion() {
-            if (!shouldShowSection('dinner')) return;
-            
-            const items = getItems('dinner');
-            const checked = getChecked('dinner');
-            
-            if (checked.length !== items.length || items.length === 0) return;
-            
-            const dinnerType = getChecklistType('dinner');
-            const completedKey = `${dinnerType}Completed`;
-            if (Storage.get(completedKey)) return;
-            
-            const now = getCurrentTime();
-            if (now.getHours() < 19) {
-                const total = addCoins(1);
-                Storage.set(completedKey, true);
-                Storage.set(`${completedKey}Coins`, 1);
-                updateProgress();
-                showModal('🍽️ Great job finishing dinner!', `You earned 1 coin! Total coins: ${total}`);
-            }
-        }
-
-        function checkBonusCompletion(index) {
-            const rewards = getBonusRewards();
-            if (rewards.includes(index)) return;
-            console.log("checkBonusCompletion:", {index, rewards, alreadyRewarded: rewards.includes(index)});
-            
-            rewards.push(index);
-            saveBonusRewards(rewards);
-            
-            const total = addCoins(1);
-            showModal('⭐ Great job!', `You earned 1 coin! Total coins: ${total}`, 2000);
-            console.log("Awarded bonus coin! New total:", total);
-        }
-
-        // ============================================================================
-        // UI UPDATES
-        // ============================================================================
-        
-        function showModal(title, message, duration = 3000) {
-            document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalMessage').textContent = message;
-            document.getElementById('modal').classList.add('show');
-            
-            setTimeout(() => {
-                document.getElementById('modal').classList.remove('show');
-            }, duration);
-        }
-
-        function updateProgress() {
-            const mainItems = getItems('main');
-            const mainChecked = getChecked('main');
-            const dinnerItems = shouldShowSection('dinner') ? getItems('dinner') : [];
-            const dinnerChecked = shouldShowSection('dinner') ? getChecked('dinner') : [];
-            const bonusItems = getBonusItems();
-            const bonusChecked = getBonusChecked();
-            
-            const totalItems = mainItems.length + dinnerItems.length + bonusItems.length;
-            const totalChecked = mainChecked.length + dinnerChecked.length + bonusChecked.length;
-            const percent = totalItems ? Math.round((totalChecked / totalItems) * 100) : 0;
-            
-            document.getElementById('progress').style.width = percent + '%';
-            document.getElementById('progress').textContent = percent + '%';
-            document.getElementById('coins').innerHTML = `
-                🪙 Total: ${getCoins()} | Today: ${getDailyCoins()} 
-                <button class="reset-btn" onclick="resetCoins()">Reset Total</button>
-            `;
-            
-            document.getElementById('dollars').innerHTML = `
-                💵 Total: ${formatDollars(getDollars())} | Today: ${formatDollars(getDailyDollars())} 
-                <button class="reset-btn" onclick="resetDollars()">Reset Total</button>
-            `;
-            
-            checkMainCompletion();
-            checkDinnerCompletion();
-        }
-
-        function renderRewards() {
-            if (isSaturday) {
-                document.getElementById('rewardsContainer').innerHTML = '';
-                return;
-            }
-
-            let rewardConfig;
-            if (isHoliday) {
-                rewardConfig = [...CONFIG.rewards.holidayMorning, ...CONFIG.rewards.holidayAfternoon];
-            } else {
-                rewardConfig = isMorning ? (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) : CONFIG.rewards.evening;
-            }
-            
-            const rewardsHTML = `
-                <h3>🎁 Rewards</h3>
-                <ul>
-                    ${rewardConfig.map((reward, i) => `
-                        <li>
-                            <span>${reward.label}</span>
-                            <span class="timer" id="timer${i + 1}"></span>
-                        </li>
-                    `).join('')}
-                </ul>
-            `;
-            
-            document.getElementById('rewardsContainer').innerHTML = rewardsHTML;
-        }
-
-        function updateTimers() {
-            const now = getCurrentTime();
-            const rewardConfig = isHoliday
-                ? [...CONFIG.rewards.holidayMorning, ...CONFIG.rewards.holidayAfternoon]
-                : isMorning ? (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) : CONFIG.rewards.evening;
-            
-            rewardConfig.forEach((reward, i) => {
-                const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), reward.hour, reward.minute, 0);
-                const diff = target - now;
-                
-                const timer = document.getElementById(`timer${i + 1}`);
-                if (timer) {
-                    if (diff <= 0) {
-                        // Check if reward was achieved
-                        let completedKey;
-                        if (reward.isDinner) {
-                            completedKey = `${getChecklistType('dinner')}Completed`;
-                        } else if (isHoliday && reward.hour <= 12) {
-                            completedKey = 'holidayMorningCompleted';
-                        } else if (isHoliday) {
-                            completedKey = 'holidayAfternoonCompleted';
-                        } else {
-                            completedKey = `${type}Completed`;
-                        }
-                        const wasCompleted = Storage.get(completedKey);
-                        const coinsEarned = Storage.get(`${completedKey}Coins`, 0);
-                        
-                        if (wasCompleted && coinsEarned >= reward.coins) {
-                            timer.textContent = '✓ Achieved!';
-                            timer.className = 'timer achieved';
-                        } else {
-                            timer.textContent = 'Expired';
-                            timer.className = 'timer expired';
-                        }
-                    } else {
-                        const hours = Math.floor(diff / 3600000);
-                        const mins = Math.floor((diff % 3600000) / 60000);
-                        const secs = Math.floor((diff % 60000) / 1000);
-                        timer.textContent = `${hours}h ${mins}m ${secs}s`;
-                        timer.className = 'timer';
-                    }
-                }
-            });
-        }
-
-        function render() {
-            const mainItems = getItems('main');
-            const mainChecked = getChecked('main');
-            const dinnerItems = shouldShowSection('dinner') ? getItems('dinner') : [];
-            const dinnerChecked = shouldShowSection('dinner') ? getChecked('dinner') : [];
-            const bonusItems = getBonusItems();
-            const bonusChecked = getBonusChecked();
-            
-            let html = '';
-            if (isHoliday) {
-                const morningItems = DEFAULT_ITEMS.holidayMorning;
-                const afternoonItems = DEFAULT_ITEMS.holidayAfternoon;
-                html += '<div class="section-title">☀️ Morning Tasks</div>';
-                html += morningItems.map((item, i) => `
-                    <div class="item ${mainChecked.includes(i) ? 'checked' : ''}">
-                        <input type="checkbox" ${mainChecked.includes(i) ? 'checked' : ''} onchange="toggleMain(${i})">
-                        <span>${item}</span>
-                    </div>
-                `).join('');
-                html += '<div class="section-title">🌤️ Afternoon Tasks</div>';
-                html += afternoonItems.map((item, i) => {
-                    const idx = morningItems.length + i;
-                    return `
-                        <div class="item ${mainChecked.includes(idx) ? 'checked' : ''}">
-                            <input type="checkbox" ${mainChecked.includes(idx) ? 'checked' : ''} onchange="toggleMain(${idx})">
-                            <span>${item}</span>
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                html += mainItems.map((item, i) => `
-                    <div class="item ${mainChecked.includes(i) ? 'checked' : ''}">
-                        <input type="checkbox" ${mainChecked.includes(i) ? 'checked' : ''} onchange="toggleMain(${i})">
-                        <span>${item}</span>
-                    </div>
-                `).join('');
-            }
-
-            if (dinnerItems.length > 0) {
-                html += '<div class="section-title">🍽️ Dinner (separate reward)</div>';
-                html += dinnerItems.map((item, i) => `
-                    <div class="item ${dinnerChecked.includes(i) ? 'checked' : ''}">
-                        <input type="checkbox" ${dinnerChecked.includes(i) ? 'checked' : ''} onchange="toggleDinner(${i})">
-                        <span>${item}</span>
-                    </div>
-                `).join('');
-            }
-
-            if (bonusItems.length > 0) {
-                html += '<div class="section-title">⭐ Daily Bonus (1 coin each)</div>';
-                html += bonusItems.map((item, i) => `
-                    <div class="item ${bonusChecked.includes(i) ? 'checked' : ''}">
-                        <input type="checkbox" ${bonusChecked.includes(i) ? 'checked' : ''} onchange="toggleBonus(${i})">
-                        <span>${item}</span>
-                    </div>
-                `).join('');
-            }
-
-            // Chores section (3 coins each)
-            if (shouldShowJobs()) {
-                const choresChecked = Storage.get(`${type}ChoresChecked`, []);
-                const choresItems = DEFAULT_ITEMS.chores || [];
-                if (choresItems.length > 0) {
-                    html += '<div class="section-title">🧹 Chores (5 coins each)</div>';
-                    html += choresItems.map((item, i) => `
-                        <div class="item ${choresChecked.includes(i) ? 'checked' : ''}">
-                            <input type="checkbox" ${choresChecked.includes(i) ? 'checked' : ''} onchange="toggleChore(${i})">
-                            <span>${item}</span>
-                        </div>
-                    `).join('');
+        } else {
+            STATE.checked_main.push(uuid);
+            // Check if all main items complete
+            const allMain = isHoliday ? [...ITEMS.main, ...ITEMS.afternoon] : ITEMS.main;
+            if (STATE.checked_main.length === allMain.length && !STATE.completed_at) {
+                const section = isHoliday ? (STATE.checked_main.length === ITEMS.main.length ? 'morning' : 'afternoon') : 'main';
+                const reward = calculateReward(section);
+                if (reward.coins > 0) {
+                    STATE.coins_earned += reward.coins;
+                    totalCoins += reward.coins;
+                    STATE.completed_at = new Date().toISOString();
+                    showModal(reward.message, `Total coins: ${totalCoins}`);
                 }
             }
-
-            if (shouldShowJobs()) {
-                const jobsChecked = getJobsChecked();
-                const totalDollars = getDollars();
-                html += `<div class="section-title">💵 Jobs (Total: ${formatDollars(totalDollars)})</div>`;
-                html += DEFAULT_ITEMS.jobs.map((job, i) => {
-                    const dollarStr = job.dollars === 1 ? '$1' : `${Math.round(job.dollars * 100)}¢`;
-                    const isChecked = jobsChecked.includes(i);
-                    return `
-                        <div class="item ${isChecked ? 'checked' : ''}">
-                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleJob(${i})">
-                            <span>${job.text} - ${dollarStr}</span>
-                        </div>
-                    `;
-                }).join('');
-            }
-            document.getElementById('checklist').innerHTML = html;
-            updateProgress();
-            if (isHoliday) checkTVUnlock();
         }
-
-        // ============================================================================
-        // EVENT HANDLERS
-        // ============================================================================
-        
-        function toggleMain(index) {
-            const checked = getChecked('main');
-            const pos = checked.indexOf(index);
-
-            if (pos > -1) {
-                checked.splice(pos, 1);
-                if (isHoliday) {
-                    const morningCount = DEFAULT_ITEMS.holidayMorning.length;
-                    const isMorningItem = index < morningCount;
-                    const mKey = 'holidayMorningCompleted';
-                    const aKey = 'holidayAfternoonCompleted';
-                    // Unchecking a morning item invalidates morning reward
-                    if (isMorningItem && Storage.get(mKey)) {
-                        removeCoins(Storage.get(`${mKey}Coins`, 0));
-                        Storage.remove(mKey);
-                        Storage.remove(`${mKey}Coins`);
-                    }
-                    // Unchecking any item invalidates afternoon reward
-                    if (Storage.get(aKey)) {
-                        removeCoins(Storage.get(`${aKey}Coins`, 0));
-                        Storage.remove(aKey);
-                        Storage.remove(`${aKey}Coins`);
-                    }
-                } else {
-                    const completedKey = `${type}Completed`;
-                    if (Storage.get(completedKey)) {
-                        removeCoins(Storage.get(`${completedKey}Coins`, 0));
-                        Storage.remove(completedKey);
-                        Storage.remove(`${completedKey}Coins`);
-                    }
-                }
-            } else {
-                checked.push(index);
-            }
-            
-            saveChecked(checked, 'main');
-            render();
-        }
-
-        function toggleDinner(index) {
-            const checked = getChecked('dinner');
-            const pos = checked.indexOf(index);
-            const dinnerType = getChecklistType('dinner');
-            const completedKey = `${dinnerType}Completed`;
-            
-            if (pos > -1) {
-                checked.splice(pos, 1);
-                if (Storage.get(completedKey)) {
-                    const coinsEarned = Storage.get(`${completedKey}Coins`, 0);
-                    removeCoins(coinsEarned);
-                    Storage.remove(`${completedKey}Coins`);
-                    Storage.remove(completedKey);
-                }
-            } else {
-                checked.push(index);
-            }
-            
-            saveChecked(checked, 'dinner');
-            render();
-        }
-
-        function toggleBonus(index) {
-            const checked = getBonusChecked();
-            const pos = checked.indexOf(index);
-            
-            if (pos > -1) {
-                checked.splice(pos, 1);
-                const rewards = getBonusRewards();
-                const rewardPos = rewards.indexOf(index);
-                console.log('UNCHECKING:', {index, rewardPos, rewards});
-                if (rewardPos > -1) {
-                    rewards.splice(rewardPos, 1);
-                    saveBonusRewards(rewards);
-                    removeCoins(1);
-                    console.log('Removed coin. New total:', getCoins());
-                }
-            } else {
-                checked.push(index);
-                checkBonusCompletion(index);
-            }
-            
-            saveBonusChecked(checked);
-            render();
-        }
-
-        function toggleChore(index) {
-            const checked = Storage.get(`${type}ChoresChecked`, []);
-            const rewards = Storage.get(`${type}ChoresRewards`, []);
-            const pos = checked.indexOf(index);
-
-            if (pos > -1) {
-                checked.splice(pos, 1);
-                if (rewards.includes(index)) {
-                    rewards.splice(rewards.indexOf(index), 1);
-                    Storage.set(`${type}ChoresRewards`, rewards);
-                    removeCoins(5);
-                }
-            } else {
-                checked.push(index);
-                if (!rewards.includes(index)) {
-                    rewards.push(index);
-                    Storage.set(`${type}ChoresRewards`, rewards);
-                    const total = addCoins(5);
-                    showModal('🧹 Great work!', `You earned 3 coins! Total: ${total}`, 2000);
-                }
-            }
-
-            Storage.set(`${type}ChoresChecked`, checked);
-            render();
-        }
-
-
-        function toggleJob(index) {
-            const checked = getJobsChecked();
-            const completed = getJobsCompleted();
-            const job = DEFAULT_ITEMS.jobs[index];
-            const pos = checked.indexOf(index);
-            
-            if (pos > -1) {
-                // Unchecking
-                checked.splice(pos, 1);
-                const completedPos = completed.indexOf(index);
-                if (completedPos > -1) {
-                    completed.splice(completedPos, 1);
-                    removeDollars(job.dollars);
-                }
-                saveJobsChecked(checked);
-                saveJobsCompleted(completed);
-            } else {
-                // Checking
-                if (job.group === 'watering') {
-                    // Uncheck other watering jobs
-                    DEFAULT_ITEMS.jobs.forEach((j, i) => {
-                        if (j.group === 'watering' && i !== index) {
-                            const waterPos = checked.indexOf(i);
-                            if (waterPos > -1) {
-                                checked.splice(waterPos, 1);
-                                const waterCompletedPos = completed.indexOf(i);
-                                if (waterCompletedPos > -1) {
-                                    completed.splice(waterCompletedPos, 1);
-                                    removeDollars(j.dollars);
-                                }
-                            }
-                        }
-                    });
-                }
-                checked.push(index);
-                saveJobsChecked(checked);
-                saveJobsCompleted(completed);
-                checkJobsCompletion(index);
-            }
-            
-            render();
-        }
-        function resetCoins() {
-            if (confirm('Reset total coins to 0?')) {
-                Storage.set('totalCoins', 0);
-                updateProgress();
-            }
-        }
-
-        function resetDollars() {
-            if (confirm('Reset total dollars to $0.00?')) {
-                Storage.set('totalDollars', 0);
-                render();
-            }
-        }
-
-        function resetChecklist() {
-            if (confirm('Reset checklist? (Coins will be kept)')) {
-                Storage.remove(`${type}Checked`);
-                Storage.remove(`${type}Completed`);
-                Storage.remove(`${type}CompletedCoins`);
-
-                if (isHoliday) {
-                    Storage.remove('holidayMorningCompleted');
-                    Storage.remove('holidayMorningCompletedCoins');
-                    Storage.remove('holidayAfternoonCompleted');
-                    Storage.remove('holidayAfternoonCompletedCoins');
-                    Storage.remove('holidayTVUnlockShown');
-                }
-                
-                if (shouldShowSection('dinner')) {
-                    const dinnerType = getChecklistType('dinner');
-                    Storage.remove(`${dinnerType}Checked`);
-                    Storage.remove(`${dinnerType}Completed`);
-                    Storage.remove(`${dinnerType}CompletedCoins`);
-                }
-                
-                Storage.remove('morningBonusChecked');
-                Storage.remove('morningBonusRewards');
-                Storage.remove('eveningBonusChecked');
-                Storage.remove('eveningBonusRewards');
-                
-                render();
-            }
-        }
-
-        // ============================================================================
-        // AUTO-RESET LOGIC
-        // ============================================================================
-        
-        function checkAutoReset() {
-            const lastReset = Storage.get('lastReset');
-            const resetHour = isSaturday ? 0 : (isMorning ? 0 : 12);
-            const nextReset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), resetHour);
-            
-            if (!lastReset || new Date(lastReset) < nextReset && now >= nextReset) {
-                // Auto-save to DB before reset (captures previous period's progress)
-                autoSaveBeforeReset();
-
-                Storage.set(`${type}Checked`, []);
-                Storage.remove(`${type}Completed`);
-                
-                if (shouldShowSection('dinner')) {
-                    const dinnerType = getChecklistType('dinner');
-                    Storage.set(`${dinnerType}Checked`, []);
-                    Storage.remove(`${dinnerType}Completed`);
-                    Storage.remove(`${dinnerType}CompletedCoins`);
-                }
-                
-                Storage.set('morningBonusChecked', []);
-                Storage.set('morningBonusRewards', []);
-                Storage.set('eveningBonusChecked', []);
-                Storage.set('eveningBonusRewards', []);
-                
-                
-                // Reset jobs
-                Storage.remove('eveningJobsChecked');
-                Storage.remove('eveningJobsCompleted');
-                Storage.remove('eveningJobsCompletedDollars');
-                Storage.remove('sundayEveningJobsChecked');
-                Storage.remove('sundayEveningJobsCompleted');
-                Storage.remove('sundayEveningJobsCompletedDollars');
-                Storage.remove('saturdayJobsChecked');
-                Storage.remove('saturdayJobsCompleted');
-                Storage.remove('saturdayJobsCompletedDollars');
-                Storage.remove('holidayAfternoonJobsChecked');
-                Storage.remove('holidayAfternoonJobsCompleted');
-                Storage.remove('holidayAfternoonJobsCompletedDollars');
-                // Reset daily coins at midnight
-                if (resetHour === 0) {
-                    Storage.set('dailyCoins', 0);
-                    Storage.set('dailyDollars', 0);
-                }
-                
-                Storage.set('lastReset', now.toISOString());
-            }
-        }
-
-        // ============================================================================
-        // SAVE TO SUPABASE (manual, triggered by button)
-        // ============================================================================
-
-        // Calculate actual coins earned from reward flags (not the running counter)
-        function calculateEarnedCoins(slug) {
-            const mainCoins = Storage.get(`${slug}CompletedCoins`, 0);
-            const dinnerSlug = slug === 'sundayEvening' ? 'sundayEveningDinner' :
-                               slug === 'holiday' ? 'holidayDinner' : 'eveningDinner';
-            const dinnerCoins = Storage.get(`${dinnerSlug}CompletedCoins`, 0);
-            const bonusCoins = getBonusRewards().length;
-            const choreCoins = (Storage.get(`${slug}ChoresRewards`, []).length) * 5;
-            return { total: mainCoins + dinnerCoins + bonusCoins + choreCoins, bonusCoins, choreCoins };
-        }
-
-        async function saveProgress() {
-            if (!sb) { alert('Not connected to database'); return; }
-            const profileId = Session.getProfileId();
-            if (!profileId) { alert('Not logged in'); return; }
-
-            const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-            const { total, bonusCoins, choreCoins } = calculateEarnedCoins(type);
-            const dailyDollars = Storage.get('dailyDollars', 0);
-            const isCompleted = Storage.get(`${type}Completed`);
-
-            try {
-                await DB.upsertDailyLog({
-                    profile_id: profileId,
-                    date: today,
-                    checklist_slug: type,
-                    coins_earned: total,
-                    bonus_coins: bonusCoins,
-                    chore_coins: choreCoins,
-                    dollars_earned: dailyDollars,
-                    completed_at: isCompleted ? new Date().toISOString() : null
-                });
-                showModal('💾 Saved!', 'Progress saved to database.', 1500);
-            } catch(e) {
-                showModal('❌ Save failed', 'Could not connect. Try again later.', 2000);
-            }
-        }
-
-        function autoSaveBeforeReset() {
-            if (!sb) return;
-            const profileId = Session.getProfileId();
-            if (!profileId) return;
-
-            const resetHour = isSaturday ? 0 : (isMorning ? 0 : 12);
-            let prevDate, prevSlug;
-            if (resetHour === 12) {
-                const d = now;
-                prevDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                prevSlug = isSunday ? 'sundayMorning' : (isHoliday ? 'holiday' : 'morning');
-            } else {
-                const yd = new Date(now.getTime() - 86400000);
-                prevDate = `${yd.getFullYear()}-${String(yd.getMonth()+1).padStart(2,'0')}-${String(yd.getDate()).padStart(2,'0')}`;
-                const ydDay = yd.getDay();
-                if (ydDay === 6) prevSlug = 'saturday';
-                else if (ydDay === 0) prevSlug = 'sundayEvening';
-                else prevSlug = 'evening';
-            }
-
-            const { total, bonusCoins, choreCoins } = calculateEarnedCoins(prevSlug);
-            const dailyDollars = Storage.get('dailyDollars', 0);
-            if (total === 0 && dailyDollars === 0) return; // nothing to save
-
-            const isCompleted = Storage.get(`${prevSlug}Completed`);
-
-            DB.upsertDailyLog({
-                profile_id: profileId,
-                date: prevDate,
-                checklist_slug: prevSlug,
-                coins_earned: total,
-                bonus_coins: bonusCoins,
-                chore_coins: choreCoins,
-                dollars_earned: dailyDollars,
-                completed_at: isCompleted ? new Date().toISOString() : null
-            }).catch(() => {}); // best effort
-        }
-
-        // ============================================================================
-        // INITIALIZATION
-        // ============================================================================
-        
-        document.getElementById('title').textContent = title;
-        renderRewards();
-        checkAutoReset();
+        await saveState();
         render();
-        
-        if (!isSaturday) {
-            updateTimers();
-            setInterval(updateTimers, 1000);
+    };
+
+    window.toggleDinner = async function(uuid) {
+        const idx = STATE.checked_dinner.indexOf(uuid);
+        if (idx > -1) {
+            STATE.checked_dinner.splice(idx, 1);
+        } else {
+            STATE.checked_dinner.push(uuid);
+            if (STATE.checked_dinner.length === ITEMS.dinner.length && now.getHours() < 19) {
+                STATE.coins_earned += 1;
+                totalCoins += 1;
+                showModal('🍽️ Great job finishing dinner!', `You earned 1 coin! Total: ${totalCoins}`);
+            }
         }
+        await saveState();
+        render();
+    };
+
+    window.toggleBonus = async function(uuid) {
+        const idx = STATE.checked_bonus.indexOf(uuid);
+        if (idx > -1) {
+            STATE.checked_bonus.splice(idx, 1);
+            STATE.bonus_coins = Math.max(0, STATE.bonus_coins - 1);
+            STATE.coins_earned = Math.max(0, STATE.coins_earned - 1);
+            totalCoins = Math.max(0, totalCoins - 1);
+        } else {
+            STATE.checked_bonus.push(uuid);
+            STATE.bonus_coins += 1;
+            STATE.coins_earned += 1;
+            totalCoins += 1;
+            showModal('⭐ Great job!', `You earned 1 coin! Total: ${totalCoins}`, 2000);
+        }
+        await saveState();
+        render();
+    };
+
+    window.toggleChore = async function(uuid) {
+        const idx = STATE.checked_chores.indexOf(uuid);
+        if (idx > -1) {
+            STATE.checked_chores.splice(idx, 1);
+            STATE.chore_coins = Math.max(0, STATE.chore_coins - 5);
+            STATE.coins_earned = Math.max(0, STATE.coins_earned - 5);
+            totalCoins = Math.max(0, totalCoins - 5);
+        } else {
+            STATE.checked_chores.push(uuid);
+            STATE.chore_coins += 5;
+            STATE.coins_earned += 5;
+            totalCoins += 5;
+            showModal('🧹 Great work!', `You earned 5 coins! Total: ${totalCoins}`, 2000);
+        }
+        await saveState();
+        render();
+    };
+
+    window.toggleJob = async function(uuid) {
+        const idx = STATE.checked_jobs.indexOf(uuid);
+        const job = ALL_ITEMS_MAP[uuid];
+        const dollars = parseFloat(job.dollars) || 0;
+        if (idx > -1) {
+            // Uncheck - if in watering group, just remove
+            STATE.checked_jobs.splice(idx, 1);
+            STATE.dollars_earned = Math.max(0, STATE.dollars_earned - dollars);
+            totalDollars = Math.max(0, totalDollars - dollars);
+        } else {
+            // If watering group, uncheck other watering jobs
+            if (job.job_group === 'watering') {
+                ITEMS.jobs.filter(j => j.job_group === 'watering' && j.id !== uuid).forEach(j => {
+                    const jIdx = STATE.checked_jobs.indexOf(j.id);
+                    if (jIdx > -1) {
+                        STATE.checked_jobs.splice(jIdx, 1);
+                        const jDollars = parseFloat(j.dollars) || 0;
+                        STATE.dollars_earned = Math.max(0, STATE.dollars_earned - jDollars);
+                        totalDollars = Math.max(0, totalDollars - jDollars);
+                    }
+                });
+            }
+            STATE.checked_jobs.push(uuid);
+            STATE.dollars_earned += dollars;
+            totalDollars += dollars;
+            const dollarStr = dollars === 1 ? '$1' : `${Math.round(dollars * 100)}¢`;
+            showModal(`💵 You earned ${dollarStr}!`, `Total: $${totalDollars.toFixed(2)}`);
+        }
+        await saveState();
+        render();
+    };
+
+    window.resetChecklist = async function() {
+        if (!confirm('Reset checklist? (History is kept)')) return;
+        STATE = { checked_main: [], checked_dinner: [], checked_bonus: [], checked_chores: [], checked_jobs: [], coins_earned: 0, bonus_coins: 0, chore_coins: 0, dollars_earned: 0, completed_at: null };
+        await saveState();
+        render();
+    };
+
+
+
+    // ========== UI ==========
+    function showModal(t, msg, duration = 3000) {
+        document.getElementById('modalTitle').textContent = t;
+        document.getElementById('modalMessage').textContent = msg;
+        document.getElementById('modal').classList.add('show');
+        setTimeout(() => document.getElementById('modal').classList.remove('show'), duration);
+    }
+    window.showModal = showModal;
+
+    function shouldShowDinner() { return !isMorning && !isSaturday && ITEMS.dinner.length > 0; }
+    function shouldShowBonus() {
+        if (ITEMS.bonus.length === 0) return false;
+        if (isMorning && !isSaturday) return true;
+        if (hour >= CONFIG.bonusStartHour) return true;
+        return false;
+    }
+    function shouldShowJobs() { return (isSaturday || !isMorning) && ITEMS.jobs.length > 0; }
+    function shouldShowChores() { return (isSaturday || !isMorning) && ITEMS.chores.length > 0; }
+
+    function render() {
+        const allMain = isHoliday ? [...ITEMS.main, ...ITEMS.afternoon] : ITEMS.main;
+        let html = '';
+
+        // Main items
+        if (isHoliday && ITEMS.main.length > 0) {
+            html += '<div class="section-title">☀️ Morning Tasks</div>';
+            html += ITEMS.main.map(item => {
+                const checked = STATE.checked_main.includes(item.id);
+                return `<div class="item ${checked?'checked':''}"><input type="checkbox" ${checked?'checked':''} onchange="toggleMain('${item.id}')"><span>${item.text}</span></div>`;
+            }).join('');
+            if (ITEMS.afternoon.length > 0) {
+                html += '<div class="section-title">🌤️ Afternoon Tasks</div>';
+                html += ITEMS.afternoon.map(item => {
+                    const checked = STATE.checked_main.includes(item.id);
+                    return `<div class="item ${checked?'checked':''}"><input type="checkbox" ${checked?'checked':''} onchange="toggleMain('${item.id}')"><span>${item.text}</span></div>`;
+                }).join('');
+            }
+        } else {
+            html += ITEMS.main.map(item => {
+                const checked = STATE.checked_main.includes(item.id);
+                return `<div class="item ${checked?'checked':''}"><input type="checkbox" ${checked?'checked':''} onchange="toggleMain('${item.id}')"><span>${item.text}</span></div>`;
+            }).join('');
+        }
+
+        // Dinner
+        if (shouldShowDinner()) {
+            html += '<div class="section-title">🍽️ Dinner (separate reward)</div>';
+            html += ITEMS.dinner.map(item => {
+                const checked = STATE.checked_dinner.includes(item.id);
+                return `<div class="item ${checked?'checked':''}"><input type="checkbox" ${checked?'checked':''} onchange="toggleDinner('${item.id}')"><span>${item.text}</span></div>`;
+            }).join('');
+        }
+
+        // Bonus
+        if (shouldShowBonus()) {
+            html += '<div class="section-title">⭐ Daily Bonus (1 coin each)</div>';
+            html += ITEMS.bonus.map(item => {
+                const checked = STATE.checked_bonus.includes(item.id);
+                return `<div class="item ${checked?'checked':''}"><input type="checkbox" ${checked?'checked':''} onchange="toggleBonus('${item.id}')"><span>${item.text}</span></div>`;
+            }).join('');
+        }
+
+        // Chores
+        if (shouldShowChores()) {
+            html += '<div class="section-title">🧹 Chores (5 coins each)</div>';
+            html += ITEMS.chores.map(item => {
+                const checked = STATE.checked_chores.includes(item.id);
+                return `<div class="item ${checked?'checked':''}"><input type="checkbox" ${checked?'checked':''} onchange="toggleChore('${item.id}')"><span>${item.text}</span></div>`;
+            }).join('');
+        }
+
+        // Jobs
+        if (shouldShowJobs()) {
+            html += `<div class="section-title">💵 Jobs (Total: $${totalDollars.toFixed(2)})</div>`;
+            html += ITEMS.jobs.map(item => {
+                const checked = STATE.checked_jobs.includes(item.id);
+                const d = parseFloat(item.dollars) || 0;
+                const dollarStr = d === 1 ? '$1' : `${Math.round(d * 100)}¢`;
+                return `<div class="item ${checked?'checked':''}"><input type="checkbox" ${checked?'checked':''} onchange="toggleJob('${item.id}')"><span>${item.text} - ${dollarStr}</span></div>`;
+            }).join('');
+        }
+
+        document.getElementById('checklist').innerHTML = html;
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const allMain = isHoliday ? [...ITEMS.main, ...ITEMS.afternoon] : ITEMS.main;
+        const totalItems = allMain.length + (shouldShowDinner() ? ITEMS.dinner.length : 0) + (shouldShowBonus() ? ITEMS.bonus.length : 0);
+        const totalChecked = STATE.checked_main.length + (shouldShowDinner() ? STATE.checked_dinner.length : 0) + (shouldShowBonus() ? STATE.checked_bonus.length : 0);
+        const percent = totalItems ? Math.round((totalChecked / totalItems) * 100) : 0;
+
+        document.getElementById('progress').style.width = percent + '%';
+        document.getElementById('progress').textContent = percent + '%';
+        document.getElementById('coins').innerHTML = `🪙 Total: ${totalCoins} | Today: ${STATE.coins_earned}`;
+        document.getElementById('dollars').innerHTML = `💵 Total: $${totalDollars.toFixed(2)} | Today: $${STATE.dollars_earned.toFixed(2)}`;
+    }
+
+    function renderRewards() {
+        if (isSaturday) { document.getElementById('rewardsContainer').innerHTML = ''; return; }
+        let cfg;
+        if (isHoliday) cfg = [...CONFIG.rewards.holidayMorning, ...CONFIG.rewards.holidayAfternoon];
+        else cfg = isMorning ? (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) : CONFIG.rewards.evening;
+        document.getElementById('rewardsContainer').innerHTML = `<h3>🎁 Rewards</h3><ul>${cfg.map((r, i) => `<li><span>${r.label}</span><span class="timer" id="timer${i+1}"></span></li>`).join('')}</ul>`;
+    }
+
+    function updateTimers() {
+        const n = new Date();
+        const cfg = isHoliday ? [...CONFIG.rewards.holidayMorning, ...CONFIG.rewards.holidayAfternoon]
+            : isMorning ? (isSunday ? CONFIG.rewards.sundayMorning : CONFIG.rewards.weekdayMorning) : CONFIG.rewards.evening;
+        cfg.forEach((r, i) => {
+            const target = new Date(n.getFullYear(), n.getMonth(), n.getDate(), r.hour, r.minute, 0);
+            const diff = target - n;
+            const timer = document.getElementById(`timer${i+1}`);
+            if (!timer) return;
+            if (diff <= 0) {
+                const achieved = STATE.completed_at && !r.isDinner;
+                timer.textContent = achieved ? '✓ Achieved!' : 'Expired';
+                timer.className = achieved ? 'timer achieved' : 'timer expired';
+            } else {
+                const hrs = Math.floor(diff/3600000), mins = Math.floor((diff%3600000)/60000), secs = Math.floor((diff%60000)/1000);
+                timer.textContent = `${hrs}h ${mins}m ${secs}s`;
+                timer.className = 'timer';
+            }
+        });
+    }
+
+    // ========== INIT ==========
+    document.getElementById('title').textContent = title;
+    renderRewards();
+    render();
+    if (!isSaturday) { updateTimers(); setInterval(updateTimers, 1000); }
+
+    })(); // end async IIFE
     </script>
 </body>
 </html>
-
