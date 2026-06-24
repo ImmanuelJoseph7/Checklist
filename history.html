@@ -120,7 +120,6 @@
             const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
             document.getElementById('monthLabel').textContent = `${months[currentMonth]} ${currentYear}`;
 
-            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
             const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
             const today = new Date();
             const startDate = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-01`;
@@ -148,10 +147,12 @@
             monthRegular = monthCoins - monthBonus - monthChores;
 
             // Render
-            const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
             let html = dayNames.map(d => `<div class="cal-header">${d}</div>`).join('');
 
-            // Empty cells before first day
+            // Empty cells before first day (Monday = 0)
+            const firstDayRaw = new Date(currentYear, currentMonth, 1).getDay();
+            const firstDay = firstDayRaw === 0 ? 6 : firstDayRaw - 1;
             for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
 
             for (let d = 1; d <= daysInMonth; d++) {
