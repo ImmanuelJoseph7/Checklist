@@ -201,7 +201,8 @@
 
     // ========== REWARD CALCULATION ==========
     function calculateReward(section) {
-        const h = now.getHours(), m = now.getMinutes();
+        const t = new Date();
+        const h = t.getHours(), m = t.getMinutes();
         if (isSaturday) return { coins: CONFIG.rewards.saturday.coins, message: '🎉 Congratulations! You have earned 3 kindness coins!' };
         if (isHoliday) {
             const cfg = section === 'morning' ? CONFIG.rewards.holidayMorning : CONFIG.rewards.holidayAfternoon;
@@ -293,7 +294,7 @@
             }
         } else {
             STATE.checked_dinner.push(uuid);
-            if (STATE.checked_dinner.length === ITEMS.dinner.length && now.getHours() < 19 && STATE.dinner_coins === 0) {
+            if (STATE.checked_dinner.length === ITEMS.dinner.length && new Date().getHours() < 19 && STATE.dinner_coins === 0) {
                 STATE.dinner_coins = 1;
                 STATE.coins_earned += 1;
                 totalCoins += 1;
