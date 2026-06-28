@@ -132,8 +132,8 @@
             ITEMS.afternoon = sorted.filter(i => i.section === 'afternoon');
             // For holiday, morning items are in 'main', afternoon in 'afternoon'
         }
-        // Also load bonus from morning/evening checklist if on saturday
-        if (isSaturday) {
+        // Also load bonus from morning/evening checklist if on saturday or sunday
+        if (isSaturday || isSunday) {
             const morn = checklists.find(c => c.slug === 'morning');
             const eve = checklists.find(c => c.slug === 'evening');
             if (morn) ITEMS.bonus = [...(morn.checklist_items||[]).filter(i=>i.section==='bonus').sort((a,b)=>a.sort_order-b.sort_order)];
