@@ -412,7 +412,7 @@
                 const checked = STATE.checked_main.includes(item.id);
                 return `<div class="item ${checked?'checked':''}"><input type="checkbox" ${checked?'checked':''} onchange="toggleMain('${item.id}')"><span>${item.text}</span></div>`;
             }).join('');
-            if (ITEMS.afternoon.length > 0) {
+            if (ITEMS.afternoon.length > 0 && !isMorning) {
                 html += '<div class="section-title">🌤️ Afternoon Tasks</div>';
                 html += ITEMS.afternoon.map(item => {
                     const checked = STATE.checked_main.includes(item.id);
