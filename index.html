@@ -138,6 +138,9 @@
             const eve = checklists.find(c => c.slug === 'evening');
             if (morn) ITEMS.bonus = [...(morn.checklist_items||[]).filter(i=>i.section==='bonus').sort((a,b)=>a.sort_order-b.sort_order)];
             if (eve) ITEMS.bonus = [...ITEMS.bonus, ...(eve.checklist_items||[]).filter(i=>i.section==='bonus').sort((a,b)=>a.sort_order-b.sort_order)];
+            // Load chores/jobs from evening if not already present
+            if (ITEMS.chores.length === 0 && eve) ITEMS.chores = (eve.checklist_items||[]).filter(i=>i.section==='chores').sort((a,b)=>a.sort_order-b.sort_order);
+            if (ITEMS.jobs.length === 0 && eve) ITEMS.jobs = (eve.checklist_items||[]).filter(i=>i.section==='jobs').sort((a,b)=>a.sort_order-b.sort_order);
         }
         // Build UUID map
         [...ITEMS.main, ...ITEMS.dinner, ...ITEMS.bonus, ...ITEMS.chores, ...ITEMS.jobs, ...ITEMS.afternoon].forEach(i => { ALL_ITEMS_MAP[i.id] = i; });
